@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase } from "../lib/supabase";
+import { AuthContext } from "../context/AuthContext";
 
 function generateSlots() {
   let slots = [];
@@ -27,6 +30,7 @@ function generateSlots() {
 export default function BedtimePlanner() {
   const [plan, setPlan] = useState(generateSlots());
   const router = useRouter();
+  const { session, loading } = useContext(AuthContext);
 
   // keep refs for jumping between inputs
   const inputRefs = useRef([]);
@@ -42,8 +46,24 @@ export default function BedtimePlanner() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateKey = "plan-" + tomorrow.toDateString();
     await AsyncStorage.setItem(dateKey, JSON.stringify(plan));
+
+    // Save sleep start
+    const sleepStart = new Date().toISOString();
+    await AsyncStorage.setItem("sleep_start", sleepStart);
+
+    const userId = session.user.id;
+
+    const { error } = await supabase
+      .from("user_state") // or sleep_sessions
+      .insert([
+        {
+          user_id: userId, // ✅ required by foreign key
+          sleep_start: sleepStart,
+        },
+      ]);
+
     alert("✅ Plan saved for tomorrow!");
-    router.push("/sleeping"); // 👈 go to sleeping screen
+    router.push("/sleeping");
   };
 
 
@@ -52,8 +72,8 @@ export default function BedtimePlanner() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={{ flex: 1, padding: 20 }}>
-        <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15 }}>
+      <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+        <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: "#fff" }}>
           ✍️ Plan Your Tomorrow
         </Text>
 
@@ -72,7 +92,7 @@ export default function BedtimePlanner() {
                 style={{
                   width: 70,
                   fontWeight: "500",
-                  color: "#444",
+                  color: "#fff",
                 }}
               >
                 {item.time}
@@ -82,6 +102,7 @@ export default function BedtimePlanner() {
                 value={item.task}
                 onChangeText={(text) => updateTask(index, text)}
                 placeholder="Task..."
+                placeholderTextColor="#ccc"
                 returnKeyType="next"
                 onSubmitEditing={() => {
                   if (index < plan.length - 1) {
@@ -91,11 +112,11 @@ export default function BedtimePlanner() {
                 blurOnSubmit={false}
                 style={{
                   borderWidth: 1,
-                  borderColor: "#ccc",
+                  borderColor: "#1A237E",
                   borderRadius: 8,
                   padding: 10,
                   flex: 1,
-                  backgroundColor: "#fff",
+                  color: "#fff"
                 }}
               />
             </View>
@@ -116,7 +137,7 @@ export default function BedtimePlanner() {
             💾 Save Plan
           </Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -13,6 +14,7 @@ export default function Home() {
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [bgColor] = useState(new Animated.Value(0)); // animated value
   const router = useRouter();
 
   const loadPlan = async () => {
@@ -33,7 +35,6 @@ export default function Home() {
     let saved = await AsyncStorage.getItem(key);
 
     if (!saved && hour < 6) {
-      // fallback check: if before 6AM, try yesterday’s saved plan
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       saved = await AsyncStorage.getItem("plan-" + yesterday.toDateString());
@@ -53,6 +54,7 @@ export default function Home() {
       setLoading(false);
     };
     init();
+    updateBackground();
   }, []);
 
   const onRefresh = async () => {
@@ -60,6 +62,30 @@ export default function Home() {
     await loadPlan();
     setRefreshing(false);
   };
+
+  // 🌇 Change color based on time
+  const getColorByTime = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 10) return "#FFF7D1"; // Morning
+    if (hour >= 10 && hour < 17) return "#FFFFFF"; // Afternoon
+    if (hour >= 17 && hour < 20) return "#FFD6A5"; // Evening
+    return "#1A237E"; // Night
+  };
+
+  const updateBackground = () => {
+    const color = getColorByTime();
+    Animated.timing(bgColor, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+    bgColor.setValue(0); // reset for smooth transition
+  };
+
+  const interpolatedColor = bgColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["#FFFFFF", getColorByTime()],
+  });
 
   if (loading) {
     return (
@@ -71,7 +97,13 @@ export default function Home() {
   }
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
+    <Animated.View
+      style={{
+        flex: 1,
+        padding: 20,
+        backgroundColor: interpolatedColor, // 👈 dynamic bg color
+      }}
+    >
       {plan ? (
         <>
           <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15 }}>
@@ -130,6 +162,6 @@ export default function Home() {
           😴 Sleeping Now...
         </Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
