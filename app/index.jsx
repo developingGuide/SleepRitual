@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [bgColor] = useState(new Animated.Value(0)); // animated value
+  const [now, setNow] = useState(new Date());
   const router = useRouter();
+  const listRef = useRef(null);
 
   const loadPlan = async () => {
     const now = new Date();
@@ -57,6 +59,45 @@ export default function Home() {
     updateBackground();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 30 * 1000); // update every 30 s
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!plan || plan.length === 0) return;
+
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // same helper you already made earlier
+    const parseToHalfHour = (timeStr) => {
+      const lower = timeStr.toLowerCase();
+      let [hour, minute] = timeStr.replace(/[^\d:]/g, "").split(":");
+      hour = parseInt(hour);
+      minute = parseInt(minute || 0);
+      if (lower.includes("pm") && hour !== 12) hour += 12;
+      if (lower.includes("am") && hour === 12) hour = 0;
+      return hour * 60 + minute;
+    };
+
+    const nearestIndex = plan.findIndex((item) => {
+      const itemMinutes = parseToHalfHour(item.time);
+      return (
+        (currentMinutes >= itemMinutes && currentMinutes < itemMinutes + 30) ||
+        Math.abs(currentMinutes - itemMinutes) < 15
+      );
+    });
+
+    if (nearestIndex !== -1 && listRef.current) {
+      // scroll slightly below the top so header stays visible
+      listRef.current.scrollToIndex({
+        index: nearestIndex,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    }
+  }, [plan, now]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadPlan();
@@ -72,20 +113,47 @@ export default function Home() {
     return "#1A237E"; // Night
   };
 
+  const getTextColorByTime = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 20) return "#000000"; // Morning → Evening: dark text
+    return "#FFFFFF"; // Night: white text
+  };
+
+  const [currentColor, setCurrentColor] = useState(getColorByTime());
+  const [textColor, setTextColor] = useState(getTextColorByTime());
+
   const updateBackground = () => {
-    const color = getColorByTime();
+    const newColor = getColorByTime();
+    const newTextColor = getTextColorByTime();
+    bgColor.setValue(0);
     Animated.timing(bgColor, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: false,
-    }).start();
-    bgColor.setValue(0); // reset for smooth transition
+    }).start(() => {
+      setCurrentColor(newColor);
+      setTextColor(newTextColor);
+    });
   };
 
   const interpolatedColor = bgColor.interpolate({
     inputRange: [0, 1],
-    outputRange: ["#FFFFFF", getColorByTime()],
+    outputRange: [currentColor, getColorByTime()],
   });
+
+
+
+
+  const parseToHalfHour = (timeStr) => {
+    // handle things like "7:30 PM", "19:00", etc.
+    const lower = timeStr.toLowerCase();
+    let [hour, minute] = timeStr.replace(/[^\d:]/g, "").split(":");
+    hour = parseInt(hour);
+    minute = parseInt(minute || 0);
+    if (lower.includes("pm") && hour !== 12) hour += 12;
+    if (lower.includes("am") && hour === 12) hour = 0;
+    return hour * 60 + minute;
+};
 
   if (loading) {
     return (
@@ -106,32 +174,69 @@ export default function Home() {
     >
       {plan ? (
         <>
-          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15 }}>
+          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor }}>
             📅 Today’s Plan
           </Text>
           <FlatList
+            ref={listRef}
+            getItemLayout={(data, index) => ({
+              length: 40, // roughly your row height in px
+              offset: 40 * index,
+              index,
+            })}
             data={plan.filter((p) => p.task.trim() !== "")}
             keyExtractor={(item, i) => i.toString()}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 10,
-                }}
-              >
-                <Text
+            renderItem={({ item }) => {
+              const currentMinutes = now.getHours() * 60 + now.getMinutes();
+              const itemMinutes = parseToHalfHour(item.time);
+              // find nearest 30-min block
+              const isNow =
+                Math.abs(currentMinutes - itemMinutes) < 15 ||
+                (currentMinutes >= itemMinutes && currentMinutes < itemMinutes + 30);
+
+              return (
+                <View
                   style={{
-                    width: 70,
-                    fontWeight: "500",
-                    color: "#444",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 10,
+                    paddingVertical: 6,
+                    backgroundColor: isNow ? "rgba(76, 175, 80, 0.15)" : "transparent",
+                    borderRadius: 6,
                   }}
                 >
-                  {item.time}
-                </Text>
-                <Text style={{ flex: 1, fontSize: 16 }}>{item.task}</Text>
-              </View>
-            )}
+                  {/* marker dot */}
+                  <View
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      marginRight: 8,
+                      backgroundColor: isNow ? "#4CAF50" : "transparent",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      width: 70,
+                      fontWeight: "500",
+                      color: textColor,
+                    }}
+                  >
+                    {item.time}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 16,
+                      color: textColor,
+                      fontWeight: isNow ? "700" : "400",
+                    }}
+                  >
+                    {item.task}
+                  </Text>
+                </View>
+              );
+            }}
             refreshing={refreshing}
             onRefresh={onRefresh}
             contentContainerStyle={{ paddingBottom: 80 }}
