@@ -20,31 +20,9 @@ export default function Sleeping() {
 
   // ✅ Wake up handler
   const handleWakeUp = async () => {
-    isWakingUp.current = true;
-
     const sleepEnd = new Date().toISOString();
-    const sleepStart = await AsyncStorage.getItem("sleep_start");
-
-    if (!sleepStart) return console.error("Sleep start not found");
-
-    const userId = session.user.id;
-    const durationMinutes =
-      (new Date(sleepEnd) - new Date(sleepStart)) / 1000 / 60;
-
-    const { error } = await supabase
-      .from("sleep_logs")
-      .update({
-        sleep_end: sleepEnd,
-        duration_minutes: Math.round(durationMinutes),
-      })
-      .eq("user_id", userId)
-      .eq("sleep_start", sleepStart);
-
-    if (error) console.error("Error saving sleep end:", error);
-
-    await AsyncStorage.multiRemove(["sleep_start", "sleep_state_active"]);
-
-    alert(`Woke up! You slept for ${Math.round(durationMinutes)} minutes 😴`);
+    await AsyncStorage.setItem("sleep_end", sleepEnd);
+    Alert.alert("🌅 Good morning!", "Time to do your gratitude journal ☀️");
     router.push("/morning");
   };
 
@@ -68,34 +46,45 @@ export default function Sleeping() {
     AsyncStorage.setItem("sleep_state_active", "true");
 
     const subscription = AppState.addEventListener("change", async (nextState) => {
-      if (
-        appState.current.match(/active|inactive/) &&
-        nextState === "background"
-      ) {
-        if (!isWakingUp.current) {
-          console.log("App backgrounded — checking sleep state");
+      const prevState = appState.current;
+      appState.current = nextState;
 
-          const sleepStart = await AsyncStorage.getItem("sleep_start");
-          if (!sleepStart) return;
+      // 🌙 When going background → record time
+      if (prevState.match(/active|inactive/) && nextState === "background") {
+        const now = Date.now();
+        await AsyncStorage.setItem("background_start", String(now));
+        console.log("App went background at", new Date(now).toLocaleTimeString());
+      }
 
-          const userId = session.user.id;
-          const { error } = await supabase
-            .from("sleep_logs")
-            .update({
-              duration_minutes: 0,
-            })
-            .eq("user_id", userId)
-            .eq("sleep_start", sleepStart);
+      // 🌅 When returning active → check how long backgrounded
+      if (prevState === "background" && nextState === "active") {
+        const backgroundStart = await AsyncStorage.getItem("background_start");
+        const sleepStart = await AsyncStorage.getItem("sleep_start");
+        if (!backgroundStart || !sleepStart) return;
 
-          if (error) console.error("Error resetting sleep:", error);
+        const now = Date.now();
+        const backgroundDuration = (now - Number(backgroundStart)) / 1000; // in seconds
+        const sleepDuration = (now - new Date(sleepStart).getTime()) / 1000 / 60; // in minutes
 
-          await AsyncStorage.multiRemove(["sleep_start", "sleep_state_active"]);
+        console.log(
+          `Background duration: ${backgroundDuration}s, Sleep duration: ${sleepDuration}min`
+        );
 
-          Alert.alert("You force-closed your sleep 😠", "Try again later.");
+        // 🕒 If background < 30s → user just checked phone or false trigger
+        if (backgroundDuration < 30) {
+          console.log("Less than 30s background — ignoring");
+          return;
+        }
+
+        // 🕓 If total sleep < 4h → didn't really sleep
+        if (sleepDuration < 1) {
+          console.log("Woke up before 4h — not real sleep");
+          Alert.alert("You didn’t really sleep 😴", "Try to rest properly!");
           router.replace("/");
+        } else {
+          console.log("Real sleep detected (>4h) — ignoring");
         }
       }
-      appState.current = nextState;
     });
 
     return () => subscription.remove();
