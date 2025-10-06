@@ -77,7 +77,7 @@ export default function Sleeping() {
         }
 
         // 🕓 If total sleep < 4h → didn't really sleep
-        if (sleepDuration < 1) {
+        if (sleepDuration < 240) {
           console.log("Woke up before 4h — not real sleep");
           Alert.alert("You didn’t really sleep 😴", "Try to rest properly!");
           router.replace("/");
