@@ -54,7 +54,7 @@ export default function BedtimePlanner() {
     const userId = session.user.id;
 
     const { error } = await supabase
-      .from("user_state") // or sleep_sessions
+      .from("sleep_logs") // or sleep_sessions
       .insert([
         {
           user_id: userId, // ✅ required by foreign key
