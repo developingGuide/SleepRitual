@@ -11,18 +11,26 @@ export function ThemeProvider({ children }) {
     return "#1A237E"; // Night
   };
 
+  const getTextColorByTime = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 20) return "#000000"; // Morning → Evening: dark text
+    return "#FFFFFF"; // Night: white text
+  };
+
+  const [textColor, setTextColor] = useState(getTextColorByTime());
   const [bgColor, setBgColor] = useState(getColorByTime());
 
   // auto-update every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setBgColor(getColorByTime());
+      setTextColor(getTextColorByTime())
     }, 30 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ bgColor, setBgColor }}>
+    <ThemeContext.Provider value={{ bgColor, textColor, setBgColor }}>
       {children}
     </ThemeContext.Provider>
   );

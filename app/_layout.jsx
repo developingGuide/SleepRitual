@@ -1,10 +1,11 @@
 import { useEffect, useState, useContext } from "react";
-import { Stack, useRouter } from "expo-router";
-import { supabase } from "../lib/supabase"; // 👈 import your Supabase client
-import AuthProvider from "../context/AuthContext";
-import { AuthContext } from "../context/AuthContext";
-import { ActivityIndicator, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Stack, Redirect } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
+import { StatusBar } from "react-native";
+import * as Font from "expo-font";
+
+import { supabase } from "../lib/supabase";
+import AuthProvider, { AuthContext } from "../context/AuthContext";
 
 function InitialRoute() {
   const { session, loading } = useContext(AuthContext);
@@ -17,8 +18,7 @@ function InitialRoute() {
     );
   }
 
-  // 🔥 If logged in → go to main app
-  // 🚪 If not logged in → go to auth pages
+  // 🔥 Redirect based on login status
   if (session) {
     return <Redirect href="/" />;
   } else {
@@ -27,17 +27,41 @@ function InitialRoute() {
 }
 
 export default function Layout() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        "Manrope-Regular": require("../assets/fonts/Manrope-Regular.ttf"),
+        "Manrope-Bold": require("../assets/fonts/Manrope-Bold.ttf")
+      });
+      setFontsLoaded(true);
+    };
+    loadFonts();
+  }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          presentation: "card",
-          animation: "fade",
-          animationDuration: 500,
-        }}
-      />
-      <InitialRoute/>
-    </AuthProvider>
+    <>
+      <StatusBar style="auto" />
+      <AuthProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            presentation: "card",
+            animation: "fade",
+            animationDuration: 500,
+          }}
+        />
+        <InitialRoute />
+      </AuthProvider>
+    </>
   );
 }

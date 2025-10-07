@@ -174,7 +174,7 @@ export default function Home() {
     >
       {plan ? (
         <>
-          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor }}>
+          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor, fontFamily: "Manrope-Regular" }}>
             📅 Today’s Plan
           </Text>
           <FlatList
@@ -220,6 +220,7 @@ export default function Home() {
                       width: 70,
                       fontWeight: "500",
                       color: textColor,
+                      fontFamily: "Manrope-Bold"
                     }}
                   >
                     {item.time}
@@ -228,6 +229,7 @@ export default function Home() {
                     style={{
                       flex: 1,
                       fontSize: 16,
+                      fontFamily: "Manrope-Regular",
                       color: textColor,
                       fontWeight: isNow ? "700" : "400",
                     }}
@@ -263,7 +265,7 @@ export default function Home() {
           marginTop: 15,
         }}
       >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
           😴 Sleeping Now...
         </Text>
       </TouchableOpacity>

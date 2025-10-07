@@ -5,13 +5,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 function TabLayout() {
   const { bgColor } = useTheme();
+  const { textColor } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#92e1afff", // green accent
-        tabBarInactiveTintColor: "#2b2b2bff",
+        tabBarActiveTintColor: "#4CAF50", // green accent
+        tabBarInactiveTintColor: textColor,
+        tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: bgColor,
           borderTopColor: bgColor,
@@ -30,7 +32,7 @@ function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="competition"
         options={{
           title: "Competition",
@@ -38,7 +40,7 @@ function TabLayout() {
             <Ionicons name="trophy-outline" color={color} size={size} />
           ),
         }}
-      />
+      /> */}
 
       <Tabs.Screen
         name="profile"
