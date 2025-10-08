@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   Alert,
   Vibration,
+  PanResponder,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAudioPlayer } from "expo-audio";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
+import Svg, { Circle } from "react-native-svg";
 
 export default function MorningScreen() {
   const [mode, setMode] = useState(null);
@@ -26,9 +28,65 @@ export default function MorningScreen() {
   const audioSource = require("../assets/chime.mp3");
   const player = useAudioPlayer(audioSource);
 
+  const [dragAngle, setDragAngle] = useState(0);
+  const [revolutions, setRevolutions] = useState(0);
+  const [manualEdit, setManualEdit] = useState(false);
+  const [manualValue, setManualValue] = useState("");
+  const [prevAngle, setPrevAngle] = useState(0);
+  
+
+  // Meditation Wheel Logic
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (e, gestureState) => handleGesture(e),
+    })
+  ).current;
+
+  const handleGesture = (e) => {
+    const { locationX, locationY } = e.nativeEvent;
+    const dx = locationX - (RADIUS + STROKE_WIDTH);
+    const dy = locationY - (RADIUS + STROKE_WIDTH);
+
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+    if (angle < 0) angle += 360;
+
+    // Detect revolution (wrap-around)
+    const diff = angle - prevAngle;
+    if (diff > 300) {
+      // Jumped backwards across 0°
+      setRevolutions((r) => Math.max(0, r - 1));
+    } else if (diff < -300) {
+      // Completed a forward revolution
+      setRevolutions((r) => r + 1);
+    }
+
+    setPrevAngle(angle);
+    setDragAngle(angle);
+  };
+
+  const RADIUS = 120;
+  const STROKE_WIDTH = 12;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+  const COLORS = ["#3F51B5", "#4CAF50", "#9C27B0", "#FF9800"];
+
+  const totalAngle = revolutions * 360 + dragAngle;
+  const formattedMinutes = Math.max(1, Math.round((totalAngle / 360) * 60));
+
+
+  const handleManualChange = () => {
+    const m = parseInt(manualValue);
+    if (!isNaN(m) && m > 0) {
+      const totalAngle = Math.min((m / 60) * 360, COLORS.length * 360 - 1);
+      setRevolutions(Math.floor(totalAngle / 360));
+      setDragAngle(totalAngle % 360);
+      setManualEdit(false);
+    }
+  };
 
   // 🧠 Shared finish logic for both gratitude & meditation
   const finishMorningRoutine = async (extraData = {}) => {
@@ -93,6 +151,8 @@ export default function MorningScreen() {
 
   const startTimer = () => {
     if (isRunning) return;
+    const totalSeconds = formattedMinutes * 60;
+    setTimer(totalSeconds);
     setIsRunning(true);
     intervalRef.current = setInterval(() => {
       setTimer((prev) => {
@@ -210,65 +270,134 @@ export default function MorningScreen() {
   }
 
   if (mode === "meditation") {
+
+    const totalSetSeconds = formattedMinutes * 60;
+    const progress = isRunning ? timer / totalSetSeconds : 1;
+
+
     return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 10 }}>
-          🧘 Meditation Timer
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
+        <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 30, color: "white" }}>
+          🧘 Set your meditation time
         </Text>
 
-        <Text style={{ fontSize: 40, fontWeight: "bold", marginBottom: 20 }}>
-          {formatTime(timer)}
-        </Text>
+        <View
+          {...panResponder.panHandlers}
+          style={{ justifyContent: "center", alignItems: "center" }}
+        >
+          <Svg
+            height={2 * (RADIUS + STROKE_WIDTH)}
+            width={2 * (RADIUS + STROKE_WIDTH)}
+          >
+            {/* background ring */}
+            <Circle
+              cx={RADIUS + STROKE_WIDTH}
+              cy={RADIUS + STROKE_WIDTH}
+              r={RADIUS}
+              stroke="#222"
+              strokeWidth={STROKE_WIDTH}
+              fill="none"
+            />
 
-        <View style={{ flexDirection: "row", gap: 10, marginBottom: 15 }}>
-          {[3, 5, 10, 15].map((m) => (
-            <TouchableOpacity
-              key={m}
-              onPress={() => setTimer(m * 60)}
-              style={{
-                backgroundColor: timer === m * 60 ? "#4CAF50" : "#ddd",
-                padding: 10,
-                borderRadius: 8,
-              }}
-            >
-              <Text>{m} min</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+            {/* full revolutions */}
+            {Array.from({ length: revolutions }).map((_, i) => (
+              <Circle
+                key={i}
+                cx={RADIUS + STROKE_WIDTH}
+                cy={RADIUS + STROKE_WIDTH}
+                r={RADIUS}
+                stroke={COLORS[i % COLORS.length]}
+                strokeWidth={STROKE_WIDTH}
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={0}
+                strokeLinecap="round"
+                fill="none"
+                transform={`rotate(-90, ${RADIUS + STROKE_WIDTH}, ${RADIUS + STROKE_WIDTH})`}
+              />
+            ))}
 
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-          <TextInput
-            value={customMinutes}
-            onChangeText={setCustomMinutes}
-            placeholder="Custom (min)"
-            keyboardType="numeric"
+            {/* Active partial arc */}
+            <Circle
+              cx={RADIUS + STROKE_WIDTH}
+              cy={RADIUS + STROKE_WIDTH}
+              r={RADIUS}
+              stroke={COLORS[revolutions % COLORS.length]}
+              strokeWidth={STROKE_WIDTH}
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={
+                isRunning
+                  ? CIRCUMFERENCE * (1 - progress) // shrink during countdown
+                  : CIRCUMFERENCE - (dragAngle / 360) * CIRCUMFERENCE // follow rotation
+              }
+              strokeLinecap="round"
+              fill="none"
+              transform={`rotate(-90, ${RADIUS + STROKE_WIDTH}, ${RADIUS + STROKE_WIDTH})`}
+            />
+          </Svg>
+
+          {/* center number */}
+          <View
             style={{
-              borderWidth: 1,
-              borderColor: "#aaa",
-              padding: 8,
-              borderRadius: 8,
-              width: 100,
-              textAlign: "center",
-              marginRight: 10,
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              justifyContent: "center",
+              alignItems: "center",
             }}
-          />
-          <Button title="Set" onPress={setCustomTimer} />
+          >
+            {isRunning ? (
+              <>
+                <Text style={{ fontSize: 48, fontWeight: "bold", color: "#fff" }}>
+                  {formatTime(timer)}
+                </Text>
+                <Text style={{ color: "#aaa", marginTop: 4 }}>remaining</Text>
+              </>
+            ) : manualEdit ? (
+              <TextInput
+                value={manualValue}
+                onChangeText={setManualValue}
+                keyboardType="numeric"
+                placeholder={`${formattedMinutes}`}
+                onSubmitEditing={handleManualChange}
+                onBlur={handleManualChange}
+                style={{
+                  fontSize: 42,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  borderBottomWidth: 1,
+                  borderColor: "#ccc",
+                  width: 100,
+                  color: "#fff",
+                }}
+              />
+            ) : (
+              <>
+                <TouchableOpacity onPress={() => setManualEdit(true)}>
+                  <Text style={{ fontSize: 48, fontWeight: "bold", color: "#fff" }}>
+                    {formattedMinutes}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={{ color: "#aaa", marginTop: 4 }}>min</Text>
+              </>
+            )}
+          </View>
         </View>
 
         <TouchableOpacity
           onPress={isRunning ? stopTimer : startTimer}
           style={{
-            backgroundColor: isRunning ? "#E91E63" : "#3F51B5",
-            padding: 15,
-            borderRadius: 10,
-            marginTop: 10,
-            width: "70%",
-            alignItems: "center",
+            backgroundColor: isRunning
+              ? "#ff4d4d" // 🔴 red for stop
+              : COLORS[revolutions % COLORS.length], // original color
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            borderRadius: 24,
+            marginTop: 40,
           }}
         >
-          <Text style={{ color: "white", fontWeight: "600" }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
             {isRunning ? "Stop" : "Start"}
           </Text>
         </TouchableOpacity>
