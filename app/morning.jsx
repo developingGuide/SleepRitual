@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Audio } from "expo-av"; // ✅ still correct import
+// import { Audio } from "expo-av"; // ✅ still correct import
+import { useAudioPlayer } from "expo-audio";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
 
@@ -23,6 +24,9 @@ export default function MorningScreen() {
   const intervalRef = useRef(null);
   const router = useRouter();
   const { session } = useContext(AuthContext);
+  const audioSource = require('../assets/chime.mp3')
+  
+  const player = useAudioPlayer(audioSource)
 
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
@@ -30,24 +34,8 @@ export default function MorningScreen() {
 
   const playChime = async () => {
     try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-      });
-
-      const { sound } = await Audio.Sound.createAsync(
-        require("../assets/chime.mp3")
-      );
-
-      await sound.playAsync();
+      player.play();
       Vibration.vibrate(500);
-
-      // optional cleanup
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-        }
-      });
     } catch (err) {
       console.error("Audio error:", err);
     }
