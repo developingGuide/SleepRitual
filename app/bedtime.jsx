@@ -59,13 +59,23 @@ export default function BedtimePlanner() {
 
     await AsyncStorage.setItem(dateKey, JSON.stringify(dataToSave));
 
-    // Save sleep start to Supabase
     const sleepStart = new Date().toISOString();
     await AsyncStorage.setItem("sleep_start", sleepStart);
 
     const { error } = await supabase.from("sleep_logs").insert([
-      { user_id: session.user.id, sleep_start: sleepStart },
+      {
+        user_id: session.user.id,
+        sleep_start: sleepStart,
+        planned_plan: mode === "planner" ? plan : null,
+        todo_list: mode === "todo" ? todoList : null,
+      },
     ]);
+
+    if (error) {
+      console.error(error);
+      alert("❌ Failed to save bedtime data.");
+      return;
+    }
 
     alert("✅ Saved successfully!");
     router.push("/sleeping");

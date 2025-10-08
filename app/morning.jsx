@@ -35,9 +35,10 @@ export default function MorningScreen() {
     try {
       const userId = session.user.id;
       const sleepStart = await AsyncStorage.getItem("sleep_start");
-      const sleepEnd = await AsyncStorage.getItem("sleep_end");
+      const sleepEnd = new Date().toISOString();
+      await AsyncStorage.setItem("sleep_end", sleepEnd);
 
-      if (!sleepStart || !sleepEnd) {
+      if (!sleepStart) {
         Alert.alert("⚠️ Missing data", "Could not find your sleep session info.");
         return;
       }
@@ -56,19 +57,19 @@ export default function MorningScreen() {
         .update({
           sleep_end: sleepEnd,
           duration_hours: durationHours,
-          ...extraData,
+          gratitude_text: extraData.gratitude_text || null,
+          meditation_minutes: extraData.meditation_minutes || null,
         })
         .eq("user_id", userId)
         .eq("sleep_start", sleepStart);
 
       if (error) {
         console.error(error);
-        Alert.alert("Error", "Failed to save sleep session.");
+        Alert.alert("Error", "Failed to save morning data.");
         return;
       }
 
       await AsyncStorage.removeItem("sleep_end");
-
       Alert.alert(
         "🌞 Morning complete!",
         `You slept for ${formattedDuration} hours 😴`,
@@ -102,7 +103,7 @@ export default function MorningScreen() {
           Alert.alert("✨ Meditation complete!", "Hope you feel centered 🌞", [
             {
               text: "Finish",
-              onPress: () => finishMorningRoutine({ meditation_done: true }),
+              onPress: () => finishMorningRoutine({ meditation_minutes: Math.floor(timer / 60) })
             },
           ]);
           return 0;
