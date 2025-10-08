@@ -10,28 +10,77 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { Audio } from "expo-av"; // ✅ still correct import
 import { useAudioPlayer } from "expo-audio";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
 
 export default function MorningScreen() {
-  const [mode, setMode] = useState(null); // "gratitude" | "meditation"
+  const [mode, setMode] = useState(null);
   const [gratitudeList, setGratitudeList] = useState(["", "", "", "", ""]);
-  const [customMinutes, setCustomMinutes] = useState("5"); // user input in minutes
-  const [timer, setTimer] = useState(300); // default 5 min
+  const [customMinutes, setCustomMinutes] = useState("5");
+  const [timer, setTimer] = useState(300);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef(null);
   const router = useRouter();
   const { session } = useContext(AuthContext);
-  const audioSource = require('../assets/chime.mp3')
-  
-  const player = useAudioPlayer(audioSource)
+  const audioSource = require("../assets/chime.mp3");
+  const player = useAudioPlayer(audioSource);
 
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
+  // 🧠 Shared finish logic for both gratitude & meditation
+  const finishMorningRoutine = async (extraData = {}) => {
+    try {
+      const userId = session.user.id;
+      const sleepStart = await AsyncStorage.getItem("sleep_start");
+      const sleepEnd = await AsyncStorage.getItem("sleep_end");
+
+      if (!sleepStart || !sleepEnd) {
+        Alert.alert("⚠️ Missing data", "Could not find your sleep session info.");
+        return;
+      }
+
+      const start = new Date(sleepStart);
+      const end = new Date(sleepEnd);
+      const durationMs = end - start;
+      const durationHours = (durationMs / (1000 * 60 * 60)).toFixed(2);
+      const totalMinutes = Math.floor(durationMs / 1000 / 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      const formattedDuration = `${hours}h ${minutes}m`;
+
+      const { error } = await supabase
+        .from("sleep_logs")
+        .update({
+          sleep_end: sleepEnd,
+          duration_hours: durationHours,
+          ...extraData,
+        })
+        .eq("user_id", userId)
+        .eq("sleep_start", sleepStart);
+
+      if (error) {
+        console.error(error);
+        Alert.alert("Error", "Failed to save sleep session.");
+        return;
+      }
+
+      await AsyncStorage.removeItem("sleep_end");
+
+      Alert.alert(
+        "🌞 Morning complete!",
+        `You slept for ${formattedDuration} hours 😴`,
+        [{ text: "Continue", onPress: () => router.push("/") }]
+      );
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Something went wrong while saving your morning entry.");
+    }
+  };
+
+  // 🧘 Meditation Timer
   const playChime = async () => {
     try {
       player.play();
@@ -51,7 +100,10 @@ export default function MorningScreen() {
           setIsRunning(false);
           playChime();
           Alert.alert("✨ Meditation complete!", "Hope you feel centered 🌞", [
-            { text: "Finish", onPress: () => router.push("/") },
+            {
+              text: "Finish",
+              onPress: () => finishMorningRoutine({ meditation_done: true }),
+            },
           ]);
           return 0;
         }
@@ -87,54 +139,15 @@ export default function MorningScreen() {
       return;
     }
 
-    try {
-      const userId = session.user.id;
-      const sleepStart = await AsyncStorage.getItem("sleep_start");
-      const sleepEnd = await AsyncStorage.getItem("sleep_end");
-
-      if (!sleepStart || !sleepEnd) {
-        Alert.alert("⚠️ Missing data", "Could not find your sleep session info.");
-        return;
-      }
-
-      const start = new Date(sleepStart);
-      const end = new Date(sleepEnd);
-      const durationMs = end - start;
-      const durationHours = (durationMs / (1000 * 60 * 60)).toFixed(2);
-      const totalMinutes = Math.floor(durationMs / 1000 / 60);
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const formattedDuration = `${hours}h ${minutes}m`;
-
-      const { error } = await supabase
-        .from("sleep_logs")
-        .update({
-          sleep_end: sleepEnd,
-          duration_hours: durationHours,
-          gratitude_text: filtered.join(", "),
-        })
-        .eq("user_id", userId)
-        .eq("sleep_start", sleepStart);
-
-      if (error) {
-        console.error(error);
-        Alert.alert("Error", "Failed to save sleep session.");
-        return;
-      }
-
-      await AsyncStorage.removeItem("sleep_end");
-      Alert.alert("🌞 Morning complete!", `You slept for ${formattedDuration} hours 😴`);
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Something went wrong while saving your morning entry.");
-    }
+    finishMorningRoutine({ gratitude_text: filtered.join(", ") });
   };
 
   // ---------------- UI -----------------
   if (!mode) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <View
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}
+      >
         <Text style={{ fontSize: 20, marginBottom: 30 }}>Good morning! 🌅</Text>
         <TouchableOpacity
           onPress={() => setMode("gratitude")}
@@ -197,7 +210,9 @@ export default function MorningScreen() {
 
   if (mode === "meditation") {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <View
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}
+      >
         <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 10 }}>
           🧘 Meditation Timer
         </Text>
@@ -222,7 +237,6 @@ export default function MorningScreen() {
           ))}
         </View>
 
-        {/* custom input */}
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
           <TextInput
             value={customMinutes}
