@@ -15,6 +15,7 @@ import { useAudioPlayer } from "expo-audio";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
 import Svg, { Circle } from "react-native-svg";
+import CustomAlert from "../components/CustomAlert";
 
 export default function MorningScreen() {
   const [mode, setMode] = useState(null);
@@ -33,6 +34,10 @@ export default function MorningScreen() {
   const [manualEdit, setManualEdit] = useState(false);
   const [manualValue, setManualValue] = useState("");
   const [prevAngle, setPrevAngle] = useState(0);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertAction, setAlertAction] = useState(null);
   
 
   // Meditation Wheel Logic
@@ -97,7 +102,8 @@ export default function MorningScreen() {
       await AsyncStorage.setItem("sleep_end", sleepEnd);
 
       if (!sleepStart) {
-        Alert.alert("⚠️ Missing data", "Could not find your sleep session info.");
+        setAlertMessage("⚠️ Missing data\nCould not find your sleep session info.");
+        setAlertVisible(true);
         return;
       }
 
@@ -123,16 +129,12 @@ export default function MorningScreen() {
 
       if (error) {
         console.error(error);
-        Alert.alert("Error", "Failed to save morning data.");
+        setAlertMessage("❌ Failed to save morning data.");
+        setAlertVisible(true);
         return;
       }
 
       await AsyncStorage.removeItem("sleep_end");
-      Alert.alert(
-        "🌞 Morning complete!",
-        `You slept for ${formattedDuration} hours 😴`,
-        [{ text: "Continue", onPress: () => router.push("/") }]
-      );
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Something went wrong while saving your morning entry.");
@@ -160,12 +162,14 @@ export default function MorningScreen() {
           clearInterval(intervalRef.current);
           setIsRunning(false);
           playChime();
-          Alert.alert("✨ Meditation complete!", "Hope you feel centered 🌞", [
-            {
-              text: "Finish",
-              onPress: () => finishMorningRoutine({ meditation_minutes: Math.floor(timer / 60) })
-            },
-          ]);
+
+          setAlertMessage("✨ Meditation complete!\nHope you feel centered 🌞");
+
+          // Store navigation as a callback (not executed yet)
+          setAlertAction(() => () => router.push("/"));
+
+          setAlertVisible(true);
+          finishMorningRoutine({ meditation_minutes: Math.floor(timer / 60) });
           return 0;
         }
         return prev - 1;
@@ -181,7 +185,8 @@ export default function MorningScreen() {
   const setCustomTimer = () => {
     const minutes = parseInt(customMinutes);
     if (isNaN(minutes) || minutes <= 0) {
-      Alert.alert("⏰ Invalid time", "Please enter a valid number of minutes.");
+      setAlertMessage("⏰ Invalid time", "Please enter a valid number of minutes.");
+      setAlertVisible(true);
       return;
     }
     setTimer(minutes * 60);
@@ -196,7 +201,8 @@ export default function MorningScreen() {
   const finishGratitude = async () => {
     const filtered = gratitudeList.map((g) => g.trim()).filter(Boolean);
     if (filtered.length < 1) {
-      Alert.alert("Hold up!", "Write at least one thing you’re grateful for 🙏");
+      setAlertMessage("Hold up!", "Write at least one thing you’re grateful for 🙏");
+      setAlertVisible(true);
       return;
     }
 
@@ -401,6 +407,23 @@ export default function MorningScreen() {
             {isRunning ? "Stop" : "Start"}
           </Text>
         </TouchableOpacity>
+
+
+        <CustomAlert
+          visible={alertVisible}
+          message={alertMessage}
+          onClose={() => {
+            setAlertVisible(false);
+            setAlertAction(null);
+          }}
+          onConfirm={() => {
+            if (alertAction) {
+              alertAction(); // ✅ safely call stored function
+              setAlertAction(null);
+            }
+            setAlertVisible(false);
+          }}
+        />
       </View>
     );
   }

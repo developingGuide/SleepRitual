@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
+import CustomAlert from "../components/CustomAlert";
 
 function generateSlots() {
   let slots = [];
@@ -29,6 +30,8 @@ export default function BedtimePlanner() {
   const [mode, setMode] = useState("planner"); // 👈 'planner' | 'todo'
   const [plan, setPlan] = useState(generateSlots());
   const [todoList, setTodoList] = useState([{ text: "", done: false }]);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const inputRefs = useRef([]);
   const router = useRouter();
   const { session } = useContext(AuthContext);
@@ -73,12 +76,26 @@ export default function BedtimePlanner() {
 
     if (error) {
       console.error(error);
-      alert("❌ Failed to save bedtime data.");
+      setAlertMessage("❌ Failed to save bedtime data.");
+      setAlertVisible(true);
       return;
     }
 
-    alert("✅ Saved successfully!");
-    router.push("/sleeping");
+    setAlertMessage("✅ Saved successfully!");
+    setAlertVisible(true);
+    // router.push("/sleeping");
+  };
+
+  const handleAddAndFocus = () => {
+    setTodoList((prev) => {
+      const updated = [...prev, { text: "", done: false }];
+      // wait for next render to focus
+      setTimeout(() => {
+        const nextIndex = updated.length - 1;
+        inputRefs.current[nextIndex]?.focus();
+      }, 100);
+      return updated;
+    });
   };
 
   return (
@@ -86,7 +103,20 @@ export default function BedtimePlanner() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      
       <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+        <Text
+          style={{
+            fontSize: 22,
+            fontWeight: "600",
+            marginBottom: 15,
+            color: "#fff",
+            fontFamily: "Manrope-Bold"
+          }}
+        >
+          Plan Your Tomorrow
+        </Text>
+
         {/* 🔘 Mode Toggle */}
         <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 15 }}>
           {["planner", "todo"].map((m) => (
@@ -103,23 +133,13 @@ export default function BedtimePlanner() {
                 marginHorizontal: 5,
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>
-                {m === "planner" ? "📅 Planner" : "✅ To-Do List"}
+              <Text style={{ color: "#fff", fontWeight: "600", fontFamily: "Manrope-Regular" }}>
+                {m === "planner" ? "Planner" : "To-Do List"}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text
-          style={{
-            fontSize: 22,
-            fontWeight: "600",
-            marginBottom: 15,
-            color: "#fff",
-          }}
-        >
-          {mode === "planner" ? "✍️ Plan Your Tomorrow" : "📝 Your To-Do List"}
-        </Text>
 
         {/* 🕓 Planner */}
         {mode === "planner" && (
@@ -128,7 +148,7 @@ export default function BedtimePlanner() {
             keyExtractor={(item, i) => i.toString()}
             renderItem={({ item, index }) => (
               <View style={{ flexDirection: "row", marginBottom: 10, alignItems: "center" }}>
-                <Text style={{ width: 70, color: "#fff", fontWeight: "500" }}>
+                <Text style={{ width: 70, color: "#fff", fontWeight: "500", fontFamily: "Manrope-Bold", fontVariant: ['tabular-nums'] }}>
                   {item.time}
                 </Text>
                 <TextInput
@@ -143,12 +163,11 @@ export default function BedtimePlanner() {
                   }}
                   blurOnSubmit={false}
                   style={{
-                    borderWidth: 1,
-                    borderColor: "#3949AB",
-                    borderRadius: 8,
+                    borderWidth: 0,
                     padding: 10,
                     flex: 1,
                     color: "#fff",
+                    fontFamily: "Manrope-Regular"
                   }}
                 />
               </View>
@@ -158,35 +177,111 @@ export default function BedtimePlanner() {
 
         {/* ✅ To-Do List */}
         {mode === "todo" && (
-          <View style={{ flex: 1 }}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             {todoList.map((item, i) => (
-              <TextInput
+              <View
                 key={i}
-                value={item.text}
-                onChangeText={(text) => updateTodo(i, text)}
-                placeholder={`Task ${i + 1}`}
-                placeholderTextColor="#ccc"
                 style={{
-                  borderWidth: 1,
-                  borderColor: "#3949AB",
-                  borderRadius: 8,
-                  padding: 10,
-                  color: "#fff",
+                  flexDirection: "row",
+                  alignItems: "center",
                   marginBottom: 10,
+                  width: "85%",
+                  gap: 6,
                 }}
-              />
+              >
+                {/* Task Text */}
+                <TextInput
+                  ref={(el) => (inputRefs.current[i] = el)} // 🔗 store ref
+                  value={item.text}
+                  onChangeText={(text) => updateTodo(i, text)}
+                  placeholder={`Task ${i + 1}`}
+                  placeholderTextColor="#888"
+                  style={{
+                    flex: 1,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    color: "#fff",
+                    fontFamily: "Manrope-Regular",
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                  }}
+                  onSubmitEditing={() => {
+                    // ⏩ Move to next line if available
+                    if (i < todoList.length - 1) {
+                      inputRefs.current[i + 1]?.focus();
+                    } else {
+                      handleAddAndFocus(); // add new + focus it
+                    }
+                  }}
+                  blurOnSubmit={false} // keeps keyboard open
+                  returnKeyType="next"
+                />
+
+                {/* Time Input */}
+                <TextInput
+                  value={item.time || ""}
+                  onChangeText={(t) => {
+                    let cleaned = t.replace(/\D/g, "");
+                    if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
+                    if (cleaned.length >= 3)
+                      cleaned = cleaned.slice(0, 2) + ":" + cleaned.slice(2);
+                    const newTodos = [...todoList];
+                    newTodos[i].time = cleaned;
+                    setTodoList(newTodos);
+                  }}
+                  placeholder="@09:00"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                  style={{
+                    width: 70,
+                    textAlign: "center",
+                    color: "#fff",
+                    fontFamily: "Manrope-Regular",
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                    paddingVertical: 10,
+                  }}
+                />
+
+                {/* ❌ Delete */}
+                <TouchableOpacity
+                  onPress={() => {
+                    const filtered = todoList.filter((_, idx) => idx !== i);
+                    setTodoList(filtered);
+                  }}
+                  style={{ padding: 6 }}
+                >
+                  <Text style={{ color: "#ff6b6b", fontSize: 18 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
             ))}
+
+            {/* ➕ Add Button */}
             <TouchableOpacity
-              onPress={addTodo}
+              onPress={handleAddAndFocus}
               style={{
-                backgroundColor: "#2196F3",
-                padding: 12,
-                borderRadius: 8,
+                backgroundColor: "#4CAF50",
+                padding: 10,
+                borderRadius: 30,
                 alignItems: "center",
-                marginBottom: 15,
+                justifyContent: "center",
+                width: 50,
+                height: 50,
+                marginTop: 10,
+                shadowColor: "#000",
+                shadowOpacity: 0.3,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 4,
+                elevation: 3,
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>＋ Add Task</Text>
+              <Text style={{ color: "#fff", fontSize: 22, fontWeight: "600" }}>＋</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -194,15 +289,21 @@ export default function BedtimePlanner() {
         <TouchableOpacity
           onPress={saveData}
           style={{
-            backgroundColor: "#4CAF50",
+            backgroundColor: "#3949AB",
             padding: 15,
-            borderRadius: 10,
+            borderRadius: 25,
             alignItems: "center",
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>💾 Save</Text>
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600", fontFamily: "Manrope-Bold" }}>Save</Text>
         </TouchableOpacity>
       </SafeAreaView>
+
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => {setAlertVisible(false); router.push("/sleeping");}}
+      />
     </KeyboardAvoidingView>
   );
 }

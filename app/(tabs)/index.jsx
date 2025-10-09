@@ -150,8 +150,17 @@ export default function Home() {
               {data.todoList.map(
                 (t, i) =>
                   t.text.trim() !== "" && (
-                    <Text key={i} style={{ color: textColor, marginBottom: 10, fontSize: 16 }}>
-                      • {t.text}
+                    <Text
+                      key={i}
+                      style={{
+                        color: textColor,
+                        marginBottom: 10,
+                        fontSize: 16,
+                        fontWeight: "500",
+                        fontFamily: "Manrope-Regular",
+                      }}
+                    >
+                      • {t.text} {t.time ? `@${t.time}` : ""}
                     </Text>
                   )
               )}
