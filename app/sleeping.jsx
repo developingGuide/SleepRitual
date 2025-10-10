@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useContext, useRef } from "react";
+import { useEffect, useCallback, useContext, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/AuthContext";
+import CustomAlert from "../components/CustomAlert";
 
 export default function Sleeping() {
   const router = useRouter();
@@ -18,12 +19,19 @@ export default function Sleeping() {
   const appState = useRef(AppState.currentState);
   const isWakingUp = useRef(false);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertAction, setAlertAction] = useState(null);
+
   // ✅ Wake up handler
   const handleWakeUp = async () => {
     const sleepEnd = new Date().toISOString();
     await AsyncStorage.setItem("sleep_end", sleepEnd);
-    Alert.alert("🌅 Good morning!", "Time to do your gratitude journal ☀️");
-    router.push("/morning");
+    setAlertMessage("🌅 Good morning!!\nLet's start your morning routine! 🌞");
+
+    setAlertAction(() => () => router.push("/morning"));
+
+    setAlertVisible(true);
   };
 
   // 🚫 Back button block
@@ -173,6 +181,22 @@ export default function Sleeping() {
           🌅 Wake Up
         </Text>
       </TouchableOpacity>
+
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          setAlertAction(null);
+        }}
+        onConfirm={() => {
+          if (alertAction) {
+            alertAction(); // ✅ safely call stored function
+            setAlertAction(null);
+          }
+          setAlertVisible(false);
+        }}
+      />
     </View>
   );
 }

@@ -16,6 +16,7 @@ import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
 import Svg, { Circle } from "react-native-svg";
 import CustomAlert from "../components/CustomAlert";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function MorningScreen() {
   const [mode, setMode] = useState(null);
@@ -24,6 +25,7 @@ export default function MorningScreen() {
   const [timer, setTimer] = useState(300);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef(null);
+  const inputRefs = useRef([]); // store refs for each input
   const router = useRouter();
   const { session } = useContext(AuthContext);
   const audioSource = require("../assets/chime.mp3");
@@ -135,6 +137,13 @@ export default function MorningScreen() {
       }
 
       await AsyncStorage.removeItem("sleep_end");
+
+      setAlertMessage("✨ Morning complete!\nLet's start the day! 🌞");
+
+      // ✅ set navigation callback after save
+      setAlertAction(() => () => router.push("/"));
+
+      setAlertVisible(true);
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Something went wrong while saving your morning entry.");
@@ -155,7 +164,7 @@ export default function MorningScreen() {
     if (isRunning) return;
     const totalSeconds = formattedMinutes * 60;
     setTimer(totalSeconds);
-    setIsRunning(true);
+    setIsRunning(true);``
     intervalRef.current = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
@@ -169,7 +178,7 @@ export default function MorningScreen() {
           setAlertAction(() => () => router.push("/"));
 
           setAlertVisible(true);
-          finishMorningRoutine({ meditation_minutes: Math.floor(timer / 60) });
+          finishMorningRoutine({ meditation_minutes: formattedMinutes });
           return 0;
         }
         return prev - 1;
@@ -189,7 +198,8 @@ export default function MorningScreen() {
       setAlertVisible(true);
       return;
     }
-    setTimer(minutes * 60);
+    setRevolutions(Math.floor(minutes / 60));
+    setDragAngle(((minutes % 60) / 60) * 360);
   };
 
   const formatTime = (s) => {
@@ -206,71 +216,189 @@ export default function MorningScreen() {
       return;
     }
 
-    finishMorningRoutine({ gratitude_text: filtered.join(", ") });
+    await finishMorningRoutine({ gratitude_text: filtered.join(", ") }); // ✅ wait for DB save
   };
 
   // ---------------- UI -----------------
   if (!mode) {
     return (
       <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+          backgroundColor: "#FFF7D1",
+        }}
       >
-        <Text style={{ fontSize: 20, marginBottom: 30 }}>Good morning! 🌅</Text>
-        <TouchableOpacity
-          onPress={() => setMode("gratitude")}
+        <Text
           style={{
-            backgroundColor: "#4CAF50",
-            padding: 15,
-            borderRadius: 10,
-            marginBottom: 15,
-            width: "80%",
-            alignItems: "center",
+            fontSize: 22,
+            marginBottom: 10,
+            fontFamily: "Manrope-Bold",
+            color: "#333",
           }}
         >
-          <Text style={{ color: "white", fontWeight: "600" }}>📝 Gratitude Journal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setMode("meditation")}
+          Good morning!
+        </Text>
+
+        <Text style={{ fontSize: 18, marginBottom: 30, color: "#444" }}>
+          Choose a routine!
+        </Text>
+
+        {/* Container for two buttons side by side */}
+        <View
           style={{
-            backgroundColor: "#3F51B5",
-            padding: 15,
-            borderRadius: 10,
-            width: "80%",
-            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            width: "90%",
           }}
         >
-          <Text style={{ color: "white", fontWeight: "600" }}>🧘 Meditation</Text>
-        </TouchableOpacity>
+          {/* Gratitude Button */}
+          <TouchableOpacity
+            onPress={() => setMode("gratitude")}
+            style={{
+              backgroundColor: "#4CAF50",
+              flex: 1,
+              aspectRatio: 1, // makes it square
+              borderRadius: 20,
+              justifyContent: "center",
+              alignItems: "center",
+              marginRight: 10,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 3,
+              elevation: 4,
+            }}
+          >
+            <Text style={{ fontSize: 50, marginBottom: 8 }}>📝</Text>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+              Gratitude
+            </Text>
+          </TouchableOpacity>
+
+          {/* Meditation Button */}
+          <TouchableOpacity
+            onPress={() => setMode("meditation")}
+            style={{
+              backgroundColor: "#4CAF50",
+              flex: 1,
+              aspectRatio: 1,
+              borderRadius: 20,
+              justifyContent: "center",
+              alignItems: "center",
+              marginLeft: 10,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 3,
+              elevation: 4,
+            }}
+          >
+            <Text style={{ fontSize: 50, marginBottom: 8 }}>🧘</Text>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+              Meditation
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   if (mode === "gratitude") {
+    const handleNextInput = (index) => {
+      if (index < gratitudeList.length - 1) {
+        inputRefs.current[index + 1].focus();
+      } else {
+        inputRefs.current[index].blur(); // close keyboard at the end
+      }
+    };
+
     return (
-      <View style={{ flex: 1, padding: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 10 }}>
-          🙏 Write 5 things you’re grateful for
-        </Text>
-        {gratitudeList.map((g, i) => (
-          <TextInput
-            key={i}
-            value={g}
-            onChangeText={(text) => {
-              const newList = [...gratitudeList];
-              newList[i] = text;
-              setGratitudeList(newList);
-            }}
-            placeholder={`#${i + 1}`}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#FFF7D1",
+          paddingHorizontal: 20,
+          paddingVertical: 40,
+        }}
+      >
+        {/* Centered content */}
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Text
             style={{
-              borderWidth: 1,
-              borderColor: "#aaa",
-              padding: 10,
-              marginVertical: 5,
-              borderRadius: 8,
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+              marginBottom: 20,
             }}
-          />
-        ))}
-        <Button title="Finish & See Plan" onPress={finishGratitude} />
+          >
+            I am grateful for...
+          </Text>
+
+          {gratitudeList.map((g, i) => (
+            <TextInput
+              key={i}
+              ref={(ref) => (inputRefs.current[i] = ref)}
+              value={g}
+              onChangeText={(text) => {
+                const newList = [...gratitudeList];
+                newList[i] = text;
+                setGratitudeList(newList);
+              }}
+              blurOnSubmit={false}
+              placeholder={`#${i + 1}`}
+              returnKeyType={i === gratitudeList.length - 1 ? "done" : "next"}
+              onSubmitEditing={() => handleNextInput(i)} // ✅ go to next input
+              style={{
+                padding: 12,
+                marginVertical: 6,
+                fontSize: 16,
+              }}
+            />
+          ))}
+        </View>
+
+        {/* Bottom button */}
+        <TouchableOpacity
+          onPress={finishGratitude}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: "#4CAF50",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            alignSelf: "flex-end",
+            right: 10
+          }}
+        >
+          <Text
+            style={{
+              color: "white"
+            }}
+          >
+            <Ionicons name="checkmark" color="#fff" size={25}/>
+          </Text>
+        </TouchableOpacity>
+
+        <CustomAlert
+          visible={alertVisible}
+          message={alertMessage}
+          onClose={() => {
+            setAlertVisible(false);
+            setAlertAction(null);
+          }}
+          onConfirm={() => {
+            if (alertAction) {
+              alertAction(); // ✅ safely call stored function
+              setAlertAction(null);
+            }
+            setAlertVisible(false);
+          }}
+        />
       </View>
     );
   }

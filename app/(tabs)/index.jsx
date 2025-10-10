@@ -37,7 +37,17 @@ export default function Home() {
       saved = await AsyncStorage.getItem("night_data-" + yesterday.toDateString());
     }
 
-    if (saved) setData(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Give each todo an ID if it doesn’t have one
+      if (parsed.todoList) {
+        parsed.todoList = parsed.todoList.map((t, idx) => ({
+          id: t.id || `${Date.now()}-${idx}`,
+          ...t,
+        }));
+      }
+      setData(parsed);
+    }
     else setData(null);
   };
 
@@ -129,7 +139,7 @@ export default function Home() {
     >
       {data ? (
         <>
-          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor }}>
+          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor, fontFamily: "Manrope-Bold" }}>
             {data.mode === "planner" ? "📅 Today’s Plan" : "✅ Today’s To-Do List"}
           </Text>
 
@@ -139,31 +149,133 @@ export default function Home() {
               data={data.plan.filter((p) => p.task.trim() !== "")}
               keyExtractor={(item, i) => i.toString()}
               renderItem={({ item }) => (
-                <View style={{ flexDirection: "row", marginBottom: 10 }}>
-                  <Text style={{ width: 70, color: textColor }}>{item.time}</Text>
-                  <Text style={{ color: textColor, flex: 1 }}>{item.task}</Text>
+                <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
+                  <View
+                    style={{
+                      width: 1,
+                      backgroundColor: textColor,
+                      opacity: 0.15,
+                      marginRight: 10,
+                      borderRadius: 1,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      width: 60,
+                      fontSize: 13,
+                      color: textColor,
+                      opacity: 0.4,
+                      textAlign: "right",
+                      fontFamily: "Manrope-Bold",
+                    }}
+                  >
+                    {item.time}
+                  </Text>
+                  <Text
+                    style={{
+                      color: textColor,
+                      flex: 1,
+                      fontFamily: "Manrope-Regular",
+                      fontSize: 15,
+                      marginLeft: 12,
+                    }}
+                  >
+                    {item.task}
+                  </Text>
                 </View>
               )}
             />
           ) : (
-            <View>
-              {data.todoList.map(
-                (t, i) =>
+            // ✅ To-Do View
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              {data.todoList
+                .slice()
+                .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
+                .map((t) => (
                   t.text.trim() !== "" && (
-                    <Text
-                      key={i}
+                    <TouchableOpacity
+                      key={t.id}
+                      onPress={() => {
+                        const updated = data.todoList.map((item) =>
+                          item.id === t.id ? { ...item, done: !item.done } : item
+                        );
+
+                        const newData = { ...data, todoList: updated };
+                        setData(newData);
+
+                        AsyncStorage.setItem(
+                          "night_data-" + new Date().toDateString(),
+                          JSON.stringify(newData)
+                        );
+                      }}
+                      activeOpacity={0.7}
                       style={{
-                        color: textColor,
-                        marginBottom: 10,
-                        fontSize: 16,
-                        fontWeight: "500",
-                        fontFamily: "Manrope-Regular",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "90%",
+                        paddingVertical: 10,
+                        borderBottomWidth: 0.5,
+                        borderColor: "rgba(0,0,0,0.1)",
                       }}
                     >
-                      • {t.text} {t.time ? `@${t.time}` : ""}
-                    </Text>
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontSize: 16,
+                          fontWeight: "500",
+                          color: textColor,
+                          textDecorationLine: t.done ? "line-through" : "none",
+                          opacity: t.done ? 0.5 : 1,
+                          fontFamily: "Manrope-Bold",
+                        }}
+                      >
+                        {t.text}
+                        {t.time ? (
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              opacity: 0.4,
+                              fontFamily: "Manrope-Regular",
+                            }}
+                          >
+                            {"  @" + t.time}
+                          </Text>
+                        ) : null}
+                      </Text>
+
+                      <Animated.View
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          borderWidth: 1.5,
+                          borderColor: t.done ? "#4CAF50" : "rgba(0,0,0,0.25)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: t.done ? "rgba(76, 175, 80, 0.1)" : "transparent",
+                          transform: [
+                            {
+                              scale: t.done ? 1 : 0.95,
+                            },
+                          ],
+                        }}
+                      >
+                        {t.done && (
+                          <Animated.View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: "#4CAF50",
+                              opacity: 0.9,
+                            }}
+                          />
+                        )}
+                      </Animated.View>
+                    </TouchableOpacity>
                   )
-              )}
+                ))}
             </View>
           )}
         </>
@@ -175,17 +287,27 @@ export default function Home() {
 
       {/* Bottom button */}
       <TouchableOpacity
-        onPress={() => router.push("/bedtime")}
         style={{
-          backgroundColor: "#4CAF50",
-          padding: 15,
-          borderRadius: 10,
+          backgroundColor: "#3F51B5",
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          justifyContent: "center",
           alignItems: "center",
-          marginTop: 15,
+          alignSelf: "center",
+          marginTop: 20,
         }}
+        activeOpacity={0.7}
+        onPress={() => router.push("/bedtime")}
       >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-          😴 Sleeping Now...
+        <Text
+          style={{
+            color: "#fff",
+            fontFamily: "Manrope-Medium",
+            fontSize: 20,
+          }}
+        >
+          😴
         </Text>
       </TouchableOpacity>
     </Animated.View>
