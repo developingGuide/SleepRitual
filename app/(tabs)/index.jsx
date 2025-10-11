@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { OverlayContext } from "../_layout";
+import { supabase } from "../../lib/supabase";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -18,6 +20,21 @@ export default function Home() {
   const [now, setNow] = useState(new Date());
   const router = useRouter();
   const listRef = useRef(null);
+
+  const [showBreathe, setShowBreathe] = useState(false);
+  const breatheOpacity = useRef(new Animated.Value(0)).current;
+  const breatheY = useRef(new Animated.Value(0)).current;
+
+  const affirmations = [
+    "Tiny steps are sacred too",
+    "One thing at a time",
+    "Stillness is progress",
+    "Peace counts as productivity",
+    "You showed up — that’s enough",
+    "Breathe. That’s the reset button.",
+    "Slow is smooth, smooth is fast",
+  ];
+  const [quote, setQuote] = useState("");
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -121,15 +138,55 @@ export default function Home() {
     outputRange: [currentColor, getColorByTime()],
   });
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-        <Text>Loading your bedtime data...</Text>
-      </View>
-    );
-  }
+  const triggerBreathe = () => {
+    const randomQuote = affirmations[Math.floor(Math.random() * affirmations.length)];
+    setQuote(randomQuote);
 
+    const localOpacity = new Animated.Value(0);
+    const localY = new Animated.Value(0);
+
+    const overlayView = (
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 850,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "rgba(0,100,0,0.6)",
+          opacity: localOpacity,
+          transform: [{ translateY: localY }],
+          zIndex: 999,
+        }}
+      >
+        <Text style={{ fontSize: 38, color: "#fff", fontWeight: "700", marginBottom: 20 }}>
+          Breathe…
+        </Text>
+        <Text style={{ fontSize: 18, color: "#fff", opacity: 0.8 }}>{randomQuote}</Text>
+      </Animated.View>
+    );
+
+    setOverlay(overlayView);
+
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(localOpacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(localY, { toValue: -30, duration: 2000, useNativeDriver: true }),
+      ]),
+      Animated.delay(1000),
+      Animated.parallel([
+        Animated.timing(localOpacity, { toValue: 0, duration: 800, useNativeDriver: true }),
+        Animated.timing(localY, { toValue: 0, duration: 2000, useNativeDriver: true }),
+      ]),
+    ]).start(() => setOverlay(null));
+  };
+
+  const { setOverlay } = useContext(OverlayContext);
+
+  
   // helper for planner view
   const parseToHalfHour = (timeStr) => {
     const lower = timeStr.toLowerCase();
@@ -140,6 +197,15 @@ export default function Home() {
     if (lower.includes("am") && hour === 12) hour = 0;
     return hour * 60 + minute;
   };
+  
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+        <Text>Loading your bedtime data...</Text>
+      </View>
+    );
+  }
 
   return (
     <Animated.View
@@ -215,6 +281,11 @@ export default function Home() {
 
                         const newData = { ...data, todoList: updated };
                         setData(newData);
+
+                        if (!t.done) {
+                          // means the user just *completed* it
+                          triggerBreathe();
+                        }
 
                         AsyncStorage.setItem(
                           "night_data-" + new Date().toDateString(),

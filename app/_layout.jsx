@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, createContext } from "react";
 import { Stack, Redirect } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import { StatusBar } from "react-native";
@@ -26,8 +26,11 @@ function InitialRoute() {
   }
 }
 
+export const OverlayContext = createContext();
+
 export default function Layout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [overlay, setOverlay] = useState(null);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -49,19 +52,23 @@ export default function Layout() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#1A237E" }}>
-      <StatusBar style="auto" />
-      <AuthProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: "fade",
-            presentation: "transparentModal",
-            contentStyle: { backgroundColor: "#1A237E" },
-          }}
-        />
-        <InitialRoute />
-      </AuthProvider>
-    </View>
+    <OverlayContext.Provider value={{ overlay, setOverlay }}>
+      <View style={{ flex: 1, backgroundColor: "#1A237E" }}>
+        <StatusBar style="auto" />
+        <AuthProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "fade",
+              presentation: "transparentModal",
+              contentStyle: { backgroundColor: "#1A237E" },
+            }}
+          />
+          <InitialRoute />
+        </AuthProvider>
+
+        {overlay}
+      </View>
+    </OverlayContext.Provider>
   );
 }
