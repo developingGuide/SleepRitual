@@ -8,6 +8,7 @@ import {
   Alert,
   Vibration,
   PanResponder,
+  Animated
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -41,6 +42,15 @@ export default function MorningScreen() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertAction, setAlertAction] = useState(null);
   
+  const opacity = useRef(new Animated.Value(1)).current;
+  
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   // Meditation Wheel Logic
   useEffect(() => {

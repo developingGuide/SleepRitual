@@ -20,6 +20,7 @@ function TabLayout() {
           paddingBottom: 6,
           height: 60,
         },
+        animation: "fade",
       }}
     >
       <Tabs.Screen

@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart } from "react-native-gifted-charts";
 
 export default function Profile() {
-  const { bgColor } = useTheme();
-  const { textColor } = useTheme();
+  const { bgColor, textColor } = useTheme();
   const [sleepData, setSleepData] = useState([]);
   const [streak, setStreak] = useState(0);
+  const [weekLogs, setWeekLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalHours, setTotalHours] = useState(0);
 
@@ -26,30 +26,45 @@ export default function Profile() {
         .from("sleep_logs")
         .select("sleep_start, duration_hours")
         .eq("user_id", user.id)
-        .order("sleep_start", { ascending: false })
-        .limit(7);
+        .order("sleep_start", { ascending: false });
 
       if (error) throw error;
 
-      // Create lookup map
+      // Build weekly map
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+      const startOfWeekStr = startOfWeek.toISOString().split("T")[0];
+
+      const weekSet = new Set();
+      data.forEach((row) => {
+        const dateStr = new Date(row.sleep_start).toISOString().split("T")[0];
+        const logDate = new Date(dateStr);
+        if (logDate >= startOfWeek) weekSet.add(dateStr); // use Set to avoid duplicates
+      });
+      setWeekLogs(Array.from(weekSet));
+
+
+      const total = data
+        .slice(0, 7)
+        .reduce((sum, d) => sum + (parseInt(d.duration_hours) || 0), 0);
+      setTotalHours(total);
+
+      // Format chart data (Mon → Sun)
       const dataMap = {};
       data.forEach((row) => {
         const d = new Date(row.sleep_start);
         const day = d.toLocaleDateString("en-US", { weekday: "short" });
         dataMap[day] = row.duration_hours;
       });
-
-      // Fixed day order (Mon → Sun)
       const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const formatted = allDays.map((day) => ({
         label: day,
         value: parseInt(dataMap[day]) || 0,
       }));
-
-      const total = formatted.reduce((sum, d) => sum + d.value, 0);
-      setTotalHours(total);
-
       setSleepData(formatted);
+
+      // Calculate streak
       calculateStreak(data);
     } catch (err) {
       console.error("Error fetching sleep data:", err);
@@ -59,75 +74,84 @@ export default function Profile() {
   }
 
   function calculateStreak(rows) {
-    const sorted = rows.sort(
-      (a, b) => new Date(b.sleep_start) - new Date(a.sleep_start)
+    if (!rows.length) return setStreak(0);
+
+    // Sort ascending by date
+    const sorted = [...rows].sort(
+      (a, b) => new Date(a.sleep_start) - new Date(b.sleep_start)
     );
-    let streakCount = 0;
-    let current = new Date();
-    for (let i = 0; i < sorted.length; i++) {
-      const diffDays = Math.floor(
-        (current - new Date(sorted[i].sleep_start)) / (1000 * 60 * 60 * 24)
-      );
-      if (diffDays === 0 || diffDays === streakCount) {
+
+    let streakCount = 1;
+    for (let i = sorted.length - 2; i >= 0; i--) {
+      const d1 = new Date(sorted[i].sleep_start);
+      const d2 = new Date(sorted[i + 1].sleep_start);
+      const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
         streakCount++;
-        current.setDate(current.getDate() - 1);
-      } else break;
+      } else if (diffDays > 1) {
+        break;
+      }
     }
     setStreak(streakCount);
   }
 
   if (loading)
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: bgColor,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <View style={[styles.center, { backgroundColor: bgColor }]}>
         <ActivityIndicator size="large" color="#92e1afff" />
       </View>
     );
 
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: bgColor,
-        paddingHorizontal: 16,
-        paddingTop: 12,
-      }}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
       {/* --- STREAK SECTION --- */}
-      <View
-        style={{ padding: 20, display:"flex", alignItems:"center" }}
-      >
-        <Text style={{ fontSize: 25, color: "#4CAF50", marginBottom: 6, fontFamily: "Manrope-Bold" }}>
-          Sleep Streak
-        </Text>
-        <Text style={{ fontSize: 50, color: {textColor}, fontWeight: "600", fontFamily: "Manrope-Regular" }}>
-          {streak} days
-        </Text>
+      <View style={styles.streakSection}>
+        <Text style={styles.streakTitle}>Sleep Streak</Text>
+        <View style={styles.streakRow}>
+          <View style={styles.streakCircle}>
+            <Text style={styles.streakNumber}>{streak}</Text>
+          </View>
+          <View style={styles.daysRow}>
+            {days.map((day, i) => {
+              const dateForDay = new Date(startOfWeek);
+              dateForDay.setDate(startOfWeek.getDate() + i);
+              const dateStr = dateForDay.toISOString().split("T")[0];
+              const filled = weekLogs.includes(dateStr);
+              return (
+                <View
+                  key={i}
+                  style={[
+                    styles.dayCircle,
+                    filled && {
+                      backgroundColor: "#4CAF50",
+                      borderColor: "#4CAF50",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dayText,
+                      filled && { color: "#fff", fontWeight: "600" },
+                    ]}
+                  >
+                    {day[0]}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
       </View>
 
       {/* --- WEEKLY SLEEP CHART --- */}
-      <View
-        style={{ padding: 20, display:"flex", alignItems:"center", marginTop: 40 }}
-      >
-        <Text
-          style={{
-            fontSize: 25,
-            color: "#4CAF50",
-            marginBottom: 12,
-            textAlign: "center",
-            fontFamily: "Manrope-Bold"
-          }}
-        >
-          Sleep Hours (Past 7 Days)
-        </Text>
-
+      <View style={{ padding: 20, alignItems: "center", marginTop: 40 }}>
+        <Text style={styles.chartTitle}>Sleep Hours (Past 7 Days)</Text>
         <BarChart
           data={sleepData}
           width={250}
@@ -147,21 +171,9 @@ export default function Profile() {
         />
 
         {/* --- TOTAL HOURS SECTION --- */}
-        <View
-          style={{ padding: 20, marginTop: 40 }}
-        >
-          <Text style={{ color: "#4CAF50", fontSize: 25, fontFamily: "Manrope-Bold" }}>
-            Total Sleep This Week
-          </Text>
-          <Text
-            style={{
-              color: {textColor},
-              fontSize: 50,
-              marginTop: 4,
-              textAlign: "center",
-              fontFamily: "Manrope-Regular"
-            }}
-          >
+        <View style={{ padding: 20, marginTop: 40 }}>
+          <Text style={styles.totalTitle}>Total Sleep This Week</Text>
+          <Text style={[styles.totalHours, { color: textColor }]}>
             {totalHours.toFixed(1)} hrs
           </Text>
         </View>
@@ -169,3 +181,75 @@ export default function Profile() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  // Streak section
+  streakSection: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  streakTitle: {
+    fontSize: 25,
+    color: "#4CAF50",
+    marginBottom: 6,
+    fontFamily: "Manrope-Bold",
+  },
+  streakRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 20,
+    padding: 10,
+  },
+  streakCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#F2994A",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  streakNumber: { fontSize: 28, fontWeight: "bold", color: "#fff" },
+
+  daysRow: { flexDirection: "row" },
+  dayCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  dayText: { fontSize: 12, color: "#333" },
+
+  // Chart section
+  chartTitle: {
+    fontSize: 25,
+    color: "#4CAF50",
+    marginBottom: 12,
+    textAlign: "center",
+    fontFamily: "Manrope-Bold",
+  },
+  totalTitle: {
+    color: "#4CAF50",
+    fontSize: 25,
+    fontFamily: "Manrope-Bold",
+  },
+  totalHours: {
+    fontSize: 50,
+    marginTop: 4,
+    textAlign: "center",
+    fontFamily: "Manrope-Regular",
+  },
+});

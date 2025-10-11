@@ -19,6 +19,18 @@ export default function Home() {
   const router = useRouter();
   const listRef = useRef(null);
 
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const fadeOutAndNavigate = () => {
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      router.push("/bedtime"); // Navigate after fade out
+    });
+  };
+
   // 🧠 Load data (either planner or to-do)
   const loadData = async () => {
     const now = new Date();
@@ -135,6 +147,7 @@ export default function Home() {
         flex: 1,
         padding: 20,
         backgroundColor: interpolatedColor,
+        opacity
       }}
     >
       {data ? (
@@ -289,25 +302,22 @@ export default function Home() {
       <TouchableOpacity
         style={{
           backgroundColor: "#3F51B5",
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          justifyContent: "center",
+          padding: 15,
+          borderRadius: 10,
           alignItems: "center",
-          alignSelf: "center",
-          marginTop: 20,
+          marginTop: 15,
         }}
         activeOpacity={0.7}
-        onPress={() => router.push("/bedtime")}
+        onPress={fadeOutAndNavigate}
       >
         <Text
           style={{
             color: "#fff",
-            fontFamily: "Manrope-Medium",
-            fontSize: 20,
+            fontFamily: "Manrope-Regular",
+            fontSize: 16,
           }}
         >
-          😴
+          😴 Sleeping Now...
         </Text>
       </TouchableOpacity>
     </Animated.View>

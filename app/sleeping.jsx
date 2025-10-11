@@ -6,6 +6,7 @@ import {
   Alert,
   BackHandler,
   AppState,
+  Animated
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
@@ -23,6 +24,8 @@ export default function Sleeping() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertAction, setAlertAction] = useState(null);
 
+  const opacity = useRef(new Animated.Value(1)).current;
+
   // ✅ Wake up handler
   const handleWakeUp = async () => {
     const sleepEnd = new Date().toISOString();
@@ -33,6 +36,15 @@ export default function Sleeping() {
 
     setAlertVisible(true);
   };
+
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   // 🚫 Back button block
   useFocusEffect(

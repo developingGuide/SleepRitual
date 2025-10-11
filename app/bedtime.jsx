@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Keyboard
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,10 +33,22 @@ export default function BedtimePlanner() {
   const [plan, setPlan] = useState(generateSlots());
   const [todoList, setTodoList] = useState([{ text: "", done: false }]);
   const [alertVisible, setAlertVisible] = useState(false);
+  const [alertAction, setAlertAction] = useState(null);
   const [alertMessage, setAlertMessage] = useState("");
   const inputRefs = useRef([]);
   const router = useRouter();
   const { session } = useContext(AuthContext);
+
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
 
   const updateTask = (index, text) => {
     const newPlan = [...plan];
@@ -82,8 +96,20 @@ export default function BedtimePlanner() {
     }
 
     setAlertMessage("✅ Saved successfully!");
+
+    setAlertAction(() => () => {
+      Keyboard.dismiss();
+
+      setTimeout(() => {
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }).start(() => router.push("/sleeping"));
+      }, 100);
+    });
+
     setAlertVisible(true);
-    // router.push("/sleeping");
   };
 
   const handleAddAndFocus = () => {
@@ -103,7 +129,13 @@ export default function BedtimePlanner() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      
+      <Animated.View 
+        style={{
+          flex: 1,
+          opacity, // 👈 bound to animation
+        }}
+      >
+
       <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
         <Text
           style={{
@@ -302,8 +334,16 @@ export default function BedtimePlanner() {
       <CustomAlert
         visible={alertVisible}
         message={alertMessage}
-        onClose={() => {setAlertVisible(false); router.push("/sleeping");}}
+        onClose={() => {
+          setAlertVisible(false);
+          if (alertAction) {
+            alertAction(); // ✅ fade + navigate only after alert closes
+            setAlertAction(null);
+          }
+        }}
       />
+
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }

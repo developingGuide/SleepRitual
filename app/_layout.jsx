@@ -49,19 +49,19 @@ export default function Layout() {
   }
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: "#1A237E" }}>
       <StatusBar style="auto" />
       <AuthProvider>
         <Stack
           screenOptions={{
             headerShown: false,
-            presentation: "card",
             animation: "fade",
-            animationDuration: 500,
+            presentation: "transparentModal",
+            contentStyle: { backgroundColor: "#1A237E" },
           }}
         />
         <InitialRoute />
       </AuthProvider>
-    </>
+    </View>
   );
 }
