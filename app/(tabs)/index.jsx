@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { OverlayContext } from "../_layout";
 import { supabase } from "../../lib/supabase";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -24,6 +25,8 @@ export default function Home() {
   const [showBreathe, setShowBreathe] = useState(false);
   const breatheOpacity = useRef(new Animated.Value(0)).current;
   const breatheY = useRef(new Animated.Value(0)).current;
+
+  const { session } = useContext(AuthContext);
 
   const affirmations = [
     "Tiny steps are sacred too",
@@ -138,12 +141,86 @@ export default function Home() {
     outputRange: [currentColor, getColorByTime()],
   });
 
-  const triggerBreathe = () => {
+  const triggerBreathe = (taskText) => {
     const randomQuote = affirmations[Math.floor(Math.random() * affirmations.length)];
     setQuote(randomQuote);
 
     const localOpacity = new Animated.Value(0);
     const localY = new Animated.Value(0);
+    const feelingOpacity = new Animated.Value(0);
+
+    let selectedFeeling = null;
+
+    const feelings = ["Calm", "Tired", "Proud", "Grateful", "Peaceful", "Anxious", "Okay"];
+
+    const FeelingStep = () => (
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "rgba(0,100,0,0.6)",
+          opacity: feelingOpacity,
+          paddingHorizontal: 25,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 22,
+            color: "#fff",
+            fontWeight: "600",
+            marginBottom: 10,
+            textAlign: "center",
+          }}
+        >
+          How are you feeling?
+        </Text>
+
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", width: "80%" }}>
+          {feelings.map((f, i) => (
+            <TouchableOpacity
+              key={i}
+              activeOpacity={0.6}
+              onPress={async () => {
+                selectedFeeling = f;
+
+                const { error } = await supabase
+                  .from("feelings")
+                  .insert([
+                    {
+                      feeling: f,
+                      task: taskText, // ✅ save it with the task
+                      created_at: new Date().toISOString(),
+                      user_id: session.user.id,
+                    },
+                  ]);
+
+                if (error) console.log("Error saving feeling:", error);
+
+                Animated.timing(feelingOpacity, {
+                  toValue: 0,
+                  duration: 800,
+                  useNativeDriver: true,
+                }).start(() => setOverlay(null));
+              }}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                margin: 6,
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 15 }}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Animated.View>
+    );
 
     const overlayView = (
       <Animated.View
@@ -173,15 +250,20 @@ export default function Home() {
 
     Animated.sequence([
       Animated.parallel([
-        Animated.timing(localOpacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(localOpacity, { toValue: 1, duration: 1000, useNativeDriver: true }),
         Animated.timing(localY, { toValue: -30, duration: 2000, useNativeDriver: true }),
       ]),
-      Animated.delay(1000),
-      Animated.parallel([
-        Animated.timing(localOpacity, { toValue: 0, duration: 800, useNativeDriver: true }),
-        Animated.timing(localY, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ]),
-    ]).start(() => setOverlay(null));
+      Animated.delay(1200),
+      Animated.timing(localOpacity, { toValue: 0, duration: 1000, useNativeDriver: true }),
+    ]).start(() => {
+      // switch to feeling picker
+      setOverlay(<FeelingStep />);
+      Animated.timing(feelingOpacity, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
   const { setOverlay } = useContext(OverlayContext);
@@ -284,7 +366,7 @@ export default function Home() {
 
                         if (!t.done) {
                           // means the user just *completed* it
-                          triggerBreathe();
+                          triggerBreathe(t.text);
                         }
 
                         AsyncStorage.setItem(
