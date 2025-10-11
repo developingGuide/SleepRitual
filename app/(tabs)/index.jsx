@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Animated,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { OverlayContext } from "../_layout";
 import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
@@ -45,7 +45,7 @@ export default function Home() {
     Animated.timing(opacity, {
       toValue: 0,
       duration: 400,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start(() => {
       router.push("/bedtime"); // Navigate after fade out
     });
@@ -57,7 +57,7 @@ export default function Home() {
     const hour = now.getHours();
     let dateToShow = new Date();
 
-    if (hour >= 6) dateToShow.setDate(dateToShow.getDate() + 1);
+    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1);
     const key = "night_data-" + dateToShow.toDateString();
 
     let saved = await AsyncStorage.getItem(key);
@@ -83,15 +83,30 @@ export default function Home() {
     else setData(null);
   };
 
-  useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      await loadData();
-      setLoading(false);
-    };
-    init();
-    updateBackground();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const init = async () => {
+        setLoading(true);
+        await loadData();
+        setLoading(false);
+        updateBackground();
+
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: false,
+        }).start();
+      };
+
+      if (isActive) init();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 30 * 1000);
@@ -301,7 +316,7 @@ export default function Home() {
       {data ? (
         <>
           <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor, fontFamily: "Manrope-Bold" }}>
-            {data.mode === "planner" ? "📅 Today’s Plan" : "✅ Today’s To-Do List"}
+            {data.mode === "planner" ? "Today’s Plan" : "To-Do"}
           </Text>
 
           {data.mode === "planner" ? (

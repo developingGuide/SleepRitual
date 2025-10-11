@@ -8,13 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Keyboard
+  Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 import CustomAlert from "../components/CustomAlert";
 
 function generateSlots() {
@@ -137,13 +138,27 @@ export default function BedtimePlanner() {
       >
 
       <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            position: "absolute",
+            top: 15,
+            left: 15,
+            zIndex: 10,
+            padding: 8,
+          }}
+        >
+          <Ionicons name="chevron-back" size={26} color="#fff" />
+        </TouchableOpacity>
+
         <Text
           style={{
             fontSize: 22,
             fontWeight: "600",
             marginBottom: 15,
             color: "#fff",
-            fontFamily: "Manrope-Bold"
+            fontFamily: "Manrope-Bold",
+            textAlign: "center",
           }}
         >
           Plan Your Tomorrow
