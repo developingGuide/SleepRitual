@@ -57,7 +57,7 @@ export default function Home() {
     const hour = now.getHours();
     let dateToShow = new Date();
 
-    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1);
+    if (hour > 6) dateToShow.setDate(dateToShow.getDate() + 1); //temporary (fix back to < and -)
     const key = "night_data-" + dateToShow.toDateString();
 
     let saved = await AsyncStorage.getItem(key);
@@ -107,6 +107,29 @@ export default function Home() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    if (!data || data.mode !== "planner" || !data.plan) return;
+
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const nearestIndex = data.plan.findIndex((item) => {
+      const itemMinutes = parseToHalfHour(item.time);
+      return (
+        (currentMinutes >= itemMinutes && currentMinutes < itemMinutes + 30) ||
+        Math.abs(currentMinutes - itemMinutes) < 15
+      );
+    });
+
+    
+    if (nearestIndex !== -1 && listRef.current) {
+      listRef.current.scrollToIndex({
+        index: nearestIndex,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    }
+  }, [data, now]);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 30 * 1000);
@@ -309,57 +332,88 @@ export default function Home() {
       style={{
         flex: 1,
         padding: 20,
-        backgroundColor: interpolatedColor,
+        backgroundColor: "#1A237E",
         opacity
       }}
     >
       {data ? (
         <>
-          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: textColor, fontFamily: "Manrope-Bold" }}>
+          <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: "#fff", fontFamily: "Manrope-Bold" }}>
             {data.mode === "planner" ? "Today’s Plan" : "To-Do"}
           </Text>
 
           {data.mode === "planner" ? (
             <FlatList
+              onScrollToIndexFailed={(info) => {
+                setTimeout(() => {
+                  if (listRef.current) {
+                    listRef.current.scrollToIndex({
+                      index: info.index,
+                      animated: true,
+                      viewPosition: 0.3,
+                    });
+                  }
+                }, 500);
+              }}
               ref={listRef}
               data={data.plan.filter((p) => p.task.trim() !== "")}
               keyExtractor={(item, i) => i.toString()}
-              renderItem={({ item }) => (
-                <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
+              renderItem={({ item }) => {
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const itemMinutes = parseToHalfHour(item.time);
+
+                // highlight if current time falls in this half-hour block
+                const isNow =
+                  (currentMinutes >= itemMinutes && currentMinutes < itemMinutes + 30) ||
+                  Math.abs(currentMinutes - itemMinutes) < 15;
+
+                return (
                   <View
                     style={{
-                      width: 1,
-                      backgroundColor: textColor,
-                      opacity: 0.15,
-                      marginRight: 10,
-                      borderRadius: 1,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      width: 60,
-                      fontSize: 13,
-                      color: textColor,
-                      opacity: 0.4,
-                      textAlign: "right",
-                      fontFamily: "Manrope-Bold",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 10,
+                      paddingVertical: 6,
+                      backgroundColor: isNow ? "rgba(76, 175, 80, 0.15)" : "transparent",
+                      borderRadius: 6,
                     }}
                   >
-                    {item.time}
-                  </Text>
-                  <Text
-                    style={{
-                      color: textColor,
-                      flex: 1,
-                      fontFamily: "Manrope-Regular",
-                      fontSize: 15,
-                      marginLeft: 12,
-                    }}
-                  >
-                    {item.task}
-                  </Text>
-                </View>
-              )}
+                    {/* marker dot */}
+                    <View
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 5,
+                        marginRight: 8,
+                        backgroundColor: isNow ? "#4CAF50" : "transparent",
+                      }}
+                    />
+
+                    <Text
+                      style={{
+                        width: 70,
+                        fontWeight: "600",
+                        color: "#fff",
+                        fontFamily: "Manrope-Bold",
+                      }}
+                    >
+                      {item.time}
+                    </Text>
+
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontSize: 16,
+                        fontFamily: "Manrope-Regular",
+                        color: "#fff",
+                        fontWeight: isNow ? "700" : "400",
+                      }}
+                    >
+                      {item.task}
+                    </Text>
+                  </View>
+                );
+              }}
             />
           ) : (
             // ✅ To-Do View
@@ -405,7 +459,7 @@ export default function Home() {
                           flex: 1,
                           fontSize: 16,
                           fontWeight: "500",
-                          color: textColor,
+                          color: "#fff",
                           textDecorationLine: t.done ? "line-through" : "none",
                           opacity: t.done ? 0.5 : 1,
                           fontFamily: "Manrope-Bold",
@@ -431,7 +485,7 @@ export default function Home() {
                           height: 22,
                           borderRadius: 11,
                           borderWidth: 1.5,
-                          borderColor: t.done ? "#4CAF50" : "rgba(0,0,0,0.25)",
+                          borderColor: t.done ? "#4CAF50" : "rgba(255,255,255,0.5)",
                           alignItems: "center",
                           justifyContent: "center",
                           backgroundColor: t.done ? "rgba(76, 175, 80, 0.1)" : "transparent",

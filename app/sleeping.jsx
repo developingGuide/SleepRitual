@@ -13,6 +13,7 @@ import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/AuthContext";
 import CustomAlert from "../components/CustomAlert";
+import { Image } from "react-native";
 
 export default function Sleeping() {
   const router = useRouter();
@@ -154,9 +155,11 @@ export default function Sleeping() {
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
-        backgroundColor: "#1A237E",
+        backgroundColor: "#141338",
       }}
     >
+      <Image source={require('../assets/sleeping_mascot.png')} style={{width: 100, height: 100}}/>
+
       <Text
         style={{
           fontSize: 24,
@@ -165,7 +168,7 @@ export default function Sleeping() {
           color: "#fff",
         }}
       >
-        😴 You’re sleeping now...
+        You’re sleeping now...
       </Text>
 
       <Text
@@ -176,8 +179,7 @@ export default function Sleeping() {
           textAlign: "center",
         }}
       >
-        Put your phone away. Rest well.  
-        You’ll continue tomorrow morning 🌅
+        Put your phone away. Rest well.
       </Text>
 
       <TouchableOpacity

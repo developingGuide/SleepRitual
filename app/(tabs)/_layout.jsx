@@ -12,12 +12,12 @@ function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#4CAF50", // green accent
-        tabBarInactiveTintColor: textColor,
+        tabBarInactiveTintColor: "#fff",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: bgColor,
-          borderTopColor: bgColor,
-          paddingBottom: 6,
+          backgroundColor: "#1A237E",
+          borderTopColor: "#1A237E",
+          paddingTop: 6,
           height: 60,
         },
         animation: "fade",
@@ -65,10 +65,9 @@ export default function RootLayout() {
 }
 
 function ThemedApp() {
-  const { bgColor } = useTheme(); // ✅ now inside the provider
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#1A237E" }}>
       <TabLayout />
     </SafeAreaView>
   );
