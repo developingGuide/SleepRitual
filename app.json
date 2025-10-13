@@ -14,14 +14,23 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wlsnwah.SleepRitual",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/Logo.png",
         "backgroundColor": "#1A237E"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.wlsnwah.SleepRitual"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,6 +38,13 @@
     "plugins": [
       "expo-router",
       "expo-audio"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6e97fe12-d3ee-4ee5-8983-ced73c417e44"
+      }
+    },
+    "owner": "wlsnwah"
   }
 }
