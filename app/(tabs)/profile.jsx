@@ -11,7 +11,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart } from "react-native-gifted-charts";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 export default function Profile() {
   const { bgColor, textColor } = useTheme();
@@ -23,6 +23,9 @@ export default function Profile() {
   const [meditationHistory, setMeditationHistory] = useState([]);
   const [activeTab, setActiveTab] = useState("gratitude");
   const [loading, setLoading] = useState(true);
+  const [showAllHistory, setShowAllHistory] = useState(false);
+
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
@@ -31,6 +34,15 @@ export default function Profile() {
       fetchSleepData().then(() => console.log("✅ Data fetched"));
     }, [])
   );
+
+  async function handleLogout() {
+    try {
+      await supabase.auth.signOut();
+      router.replace("/login"); // or "/" depending on your entry route
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
 
   async function fetchSleepData() {
     try {
@@ -140,12 +152,14 @@ export default function Profile() {
     );
 
   const renderActiveHistory = () => {
+    const limit = showAllHistory ? Infinity : 3;
+
     switch (activeTab) {
       case "gratitude":
         return gratitudeHistory.length === 0 ? (
           <Text style={styles.emptyText}>No gratitude entries yet 🌙</Text>
         ) : (
-          gratitudeHistory.map((entry, index) => (
+          gratitudeHistory.slice(0, limit).map((entry, index) => (
             <View key={index} style={styles.card}>
               <Text style={styles.cardDate}>{entry.date}</Text>
               <View style={styles.tagsRow}>
@@ -158,22 +172,12 @@ export default function Profile() {
             </View>
           ))
         );
-      case "journal":
-        return journalHistory.length === 0 ? (
-          <Text style={styles.emptyText}>No journal entries yet ✍️</Text>
-        ) : (
-          journalHistory.map((entry, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.cardDate}>{entry.date}</Text>
-              <Text style={styles.cardText}>{entry.text}</Text>
-            </View>
-          ))
-        );
+
       case "meditation":
         return meditationHistory.length === 0 ? (
           <Text style={styles.emptyText}>No meditation sessions yet 🧘‍♂️</Text>
         ) : (
-          meditationHistory.map((entry, index) => (
+          meditationHistory.slice(0, limit).map((entry, index) => (
             <View key={index} style={styles.card}>
               <Text style={styles.cardDate}>{entry.date}</Text>
               <Text style={styles.cardText}>
@@ -185,9 +189,14 @@ export default function Profile() {
     }
   };
 
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "#1A237E" }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={{ fontSize: 22, fontWeight: "600", marginTop: 15, color: "#fff", fontFamily: "Manrope-Bold", paddingLeft: 20 }}>
+          Profile
+        </Text>
+
         {/* --- WEEK OVERVIEW --- */}
         <View style={styles.overviewBox}>
           <Text style={styles.overviewTitle}>This Week</Text>
@@ -220,12 +229,19 @@ export default function Profile() {
         </View>
 
         {/* --- HISTORY SECTION --- */}
-        <View style={styles.historyBox}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => setShowAllHistory((p) => !p)}
+          style={styles.historyBox}
+        >
           <View style={styles.tabsRow}>
             {["gratitude", "meditation"].map((tab) => (
               <TouchableOpacity
                 key={tab}
-                onPress={() => setActiveTab(tab)}
+                onPress={() => {
+                  setActiveTab(tab);
+                  setShowAllHistory(false); // reset when switching tab
+                }}
                 style={[
                   styles.tabButton,
                   activeTab === tab && styles.tabButtonActive,
@@ -242,7 +258,21 @@ export default function Profile() {
               </TouchableOpacity>
             ))}
           </View>
+
           <View style={styles.historyContent}>{renderActiveHistory()}</View>
+
+          {((activeTab === "gratitude" && gratitudeHistory.length > 3) ||
+            (activeTab === "meditation" && meditationHistory.length > 3)) && (
+            <Text style={styles.showMoreText}>
+              {showAllHistory ? "Tap to show less ▲" : "Tap to see more ▼"}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.logoutButtonView}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -252,6 +282,21 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  logoutButton: {
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "#FF5252",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: "#FF5252",
+    fontWeight: "600",
+    fontSize: 15,
+    fontFamily: "Manrope-Bold"
+  },
 
   overviewBox: {
     backgroundColor: "#121212",
@@ -263,17 +308,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  overviewTitle: { color: "#8EFFC1", fontSize: 18, marginBottom: 8 },
-  totalHours: { color: "#fff", fontSize: 46, fontWeight: "700" },
-  subtext: { color: "#aaa", fontSize: 14 },
+  overviewTitle: { color: "#8EFFC1", fontSize: 18, fontFamily: "Manrope-Bold" },
+  totalHours: { color: "#fff", fontSize: 46, marginBottom: 12, fontWeight: "700", fontFamily: "Manrope-Regular" },
+  subtext: { color: "#aaa", fontSize: 14, fontFamily: "Manrope-Regular" },
   streakBubble: {
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: "#1e1e1e",
     paddingVertical: 8,
     paddingHorizontal: 18,
     borderRadius: 14,
   },
-  streakNumber: { color: "#8EFFC1", fontSize: 20, fontWeight: "bold", textAlign:"center" },
+  streakNumber: { color: "#8EFFC1", fontSize: 20, fontFamily: "Manrope-Bold", textAlign:"center" },
 
   chartBox: {
     backgroundColor: "#121212",
@@ -283,13 +328,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
   },
-  sectionTitle: { color: "#8EFFC1", fontSize: 18, marginBottom: 12 },
+  sectionTitle: { color: "#8EFFC1", fontSize: 18, marginBottom: 12, fontFamily: "Manrope-Bold" },
 
   historyBox: {
     backgroundColor: "#0E1913",
     borderRadius: 20,
     margin: 16,
     padding: 16,
+  },
+  showMoreText: {
+    color: "#8EFFC1",
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: "Manrope-Regular"
   },
   tabsRow: {
     flexDirection: "row",
@@ -302,8 +354,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tabButtonActive: { backgroundColor: "#1E3C2B" },
-  tabText: { color: "#888", fontSize: 14 },
-  tabTextActive: { color: "#8EFFC1", fontWeight: "600" },
+  tabText: { color: "#888", fontSize: 14, fontFamily: "Manrope-Bold" },
+  tabTextActive: { color: "#8EFFC1", fontWeight: "600", fontFamily: "Manrope-Bold" },
 
   historyContent: { marginTop: 4 },
   card: {
@@ -312,8 +364,8 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
-  cardDate: { color: "#8EFFC1", fontSize: 13, marginBottom: 4 },
-  cardText: { color: "#fff", fontSize: 14, lineHeight: 20 },
+  cardDate: { color: "#8EFFC1", fontSize: 13, marginBottom: 4, fontFamily: "Manrope-Bold" },
+  cardText: { color: "#fff", fontSize: 14, lineHeight: 20, fontFamily: "Manrope-Regular" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap" },
   tag: {
     backgroundColor: "#8EFFC1",
@@ -323,10 +375,11 @@ const styles = StyleSheet.create({
     marginRight: 6,
     marginBottom: 6,
   },
-  tagText: { color: "#0E1913", fontSize: 13, fontWeight: "600" },
+  tagText: { color: "#0E1913", fontSize: 13, fontWeight: "600", fontFamily: "Manrope-Regular" },
   emptyText: {
     color: "#666",
     textAlign: "center",
     paddingVertical: 10,
+    fontFamily: "Manrope-Regular"
   },
 });

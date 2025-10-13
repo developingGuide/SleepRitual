@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Keyboard } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Keyboard, Image } from "react-native"
 import { supabase } from "../../lib/supabase"
 import { useRouter } from "expo-router"
 import { AuthContext } from "../../context/AuthContext"
@@ -57,10 +57,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#1A237E" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 8, marginBottom: 12, color: "black" },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#fff" },
+  input: { borderWidth: 0.5, borderColor: "#ccc", padding: 12, borderRadius: 8, marginBottom: 12, color: "black" },
   button: { backgroundColor: "#6C63FF", padding: 15, borderRadius: 8, alignItems: "center" },
   buttonText: { color: "#fff", fontWeight: "bold" },
   error: { color: "red", marginBottom: 10 },
