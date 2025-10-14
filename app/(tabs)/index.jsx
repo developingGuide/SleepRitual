@@ -516,7 +516,7 @@ export default function Home() {
         </>
       ) : (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ fontSize: 18, marginBottom: 15 }}>No bedtime data found for today.</Text>
+          <Text style={{ fontSize: 18, marginBottom: 15, color:"#fff" }}>No bedtime data found for today.</Text>
         </View>
       )}
 
