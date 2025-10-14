@@ -12,6 +12,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { OverlayContext } from "../_layout";
 import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
+import { scheduleDailyReminder } from "../../lib/Notifications";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -135,6 +136,35 @@ export default function Home() {
     const interval = setInterval(() => setNow(new Date()), 30 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    scheduleDailyReminder(21, 0); // schedule next reminder when user sleeps
+  }, []);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!session?.user) return; // Wait for user session
+
+      const { data, error } = await supabase
+        .from("user_state")
+        .select("has_onboarded")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (error && data) {
+        console.log("Error checking onboarding:", error.message);
+        return;
+      }
+
+      if (!data || !data.has_onboarded) {
+        router.replace("/onboarding/onboarding");
+      } else {
+        router.replace("/"); // proceed normally
+      }
+    };
+
+    checkOnboarding();
+  }, [session]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -437,11 +467,6 @@ export default function Home() {
                           // means the user just *completed* it
                           triggerBreathe(t.text);
                         }
-
-                        AsyncStorage.setItem(
-                          "night_data-" + new Date().toDateString(),
-                          JSON.stringify(newData)
-                        );
                       }}
                       activeOpacity={0.7}
                       style={{
@@ -530,7 +555,9 @@ export default function Home() {
           marginTop: 15,
         }}
         activeOpacity={0.7}
-        onPress={fadeOutAndNavigate}
+        onPress={() => {
+          fadeOutAndNavigate();
+        }}
       >
         <Text
           style={{

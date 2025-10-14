@@ -3,9 +3,18 @@ import { Stack, Redirect } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import { StatusBar } from "react-native";
 import * as Font from "expo-font";
+import * as Notifications from "expo-notifications";
 
 import { supabase } from "../lib/supabase";
 import AuthProvider, { AuthContext } from "../context/AuthContext";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function InitialRoute() {
   const { session, loading } = useContext(AuthContext);
@@ -41,6 +50,17 @@ export default function Layout() {
       setFontsLoaded(true);
     };
     loadFonts();
+  }, []);
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        alert("Please enable notifications to get bedtime reminders!");
+      }
+    };
+
+    requestPermissions();
   }, []);
 
   if (!fontsLoaded) {

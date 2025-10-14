@@ -25,6 +25,9 @@ export default function Sleeping() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertAction, setAlertAction] = useState(null);
 
+  const [isMorning, setIsMorning] = useState(false); // 👈 NEW
+  const [currentMessage, setCurrentMessage] = useState("You’re sleeping now...");
+
   const opacity = useRef(new Animated.Value(1)).current;
 
   // ✅ Wake up handler
@@ -45,6 +48,25 @@ export default function Sleeping() {
       duration: 400,
       useNativeDriver: true,
     }).start();
+  }, []);
+
+  // 🕒 Check time every minute
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+
+      // If it's 5:00 AM or later → mark as morning
+      if (hours >= 5) {
+        setIsMorning(true);
+        setCurrentMessage("You’ve slept well.\nLet’s begin today with peace.");
+      }
+    };
+
+    checkTime(); // run once immediately
+    const interval = setInterval(checkTime, 60 * 1000); // check every minute
+    return () => clearInterval(interval);
   }, []);
 
   // 🚫 Back button block
@@ -168,33 +190,37 @@ export default function Sleeping() {
           color: "#fff",
         }}
       >
-        You’re sleeping now...
+        {currentMessage}
       </Text>
 
-      <Text
-        style={{
-          fontSize: 16,
-          color: "#fff",
-          marginBottom: 40,
-          textAlign: "center",
-        }}
-      >
-        Put your phone away. Rest well.
-      </Text>
-
-      <TouchableOpacity
-        onPress={handleWakeUp}
-        style={{
-          backgroundColor: "#FF9800",
-          padding: 15,
-          borderRadius: 10,
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-          🌅 Wake Up
+      {!isMorning && (
+        <Text
+          style={{
+            fontSize: 16,
+            color: "#fff",
+            marginBottom: 40,
+            textAlign: "center",
+          }}
+        >
+          Put your phone away. Rest well.
         </Text>
-      </TouchableOpacity>
+      )}
+
+      {isMorning && (
+        <TouchableOpacity
+          onPress={handleWakeUp}
+          style={{
+            backgroundColor: "#FF9800",
+            padding: 15,
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+            🌅 Wake Up
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <CustomAlert
         visible={alertVisible}
