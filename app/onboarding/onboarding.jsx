@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
+import * as Notifications from "expo-notifications";
 
 const steps = [
   {
@@ -73,6 +74,11 @@ const steps = [
     key: "vibe_preference",
   },
   {
+    type: "notification",
+    title: "Lastly, set reminders!",
+    description: "Do you want notifications so we can remind you to wind down before bed.",
+  },
+  {
     type: "end",
     title: "All set!",
     description: "Let's start building your evenings the right way!",
@@ -82,6 +88,7 @@ const steps = [
 export default function Onboarding() {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
+  const [granted, setGranted] = useState();
   const current = steps[stepIndex];
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -127,6 +134,28 @@ export default function Onboarding() {
   const prevStep = () => {
     if (stepIndex > 0) setStepIndex(stepIndex - 1);
   };
+
+  const requestNotificationPermission = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    setGranted(status === "granted");
+
+    if (status === "granted") {
+      // Example: schedule a test notification
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Welcome to DayAhead 🌙",
+          body: "You’ll get a nightly reminder when it’s time to wind down.",
+        },
+        trigger: null, // immediately
+      });
+
+      nextStep()
+    }else{
+      nextStep()
+    }
+    
+    
+  }
 
   const handleOptionSelect = async (option) => {
     if (current.key) await saveAnswer(current.key, option);
@@ -196,6 +225,18 @@ export default function Onboarding() {
             <Text style={styles.transition_text}>Lucky for you, you will have the option to choose!</Text>
             <TouchableOpacity style={styles.button} onPress={nextStep}>
               <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {current.type === "notification" && (
+          <View style={styles.container}>
+            <Text style={styles.description}>{current.description}</Text>
+            <TouchableOpacity style={styles.button} onPress={requestNotificationPermission}>
+              <Text style={styles.buttonText}>Allow Notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={nextStep} style={{ marginTop: 20 }}>
+              <Text style={{ color: "#aaa", fontSize: 15 }}>Skip for now</Text>
             </TouchableOpacity>
           </View>
         )}

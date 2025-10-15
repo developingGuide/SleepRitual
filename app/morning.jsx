@@ -8,7 +8,8 @@ import {
   Alert,
   Vibration,
   PanResponder,
-  Animated
+  Animated,
+  Platform
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,6 +19,7 @@ import { AuthContext } from "../context/AuthContext";
 import Svg, { Circle } from "react-native-svg";
 import CustomAlert from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
+import { KeyboardAvoidingView } from "react-native";
 
 export default function MorningScreen() {
   const [mode, setMode] = useState(null);
@@ -43,6 +45,7 @@ export default function MorningScreen() {
   const [alertAction, setAlertAction] = useState(null);
   
   const opacity = useRef(new Animated.Value(1)).current;
+  const modeOpacity = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
     Animated.timing(opacity, {
@@ -232,16 +235,24 @@ export default function MorningScreen() {
   // ---------------- UI -----------------
   if (!mode) {
     const handleModeSelect = (choice) => {
+      // fade out bright screen
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 600, // smooth, morning-like fade
+        duration: 500,
         useNativeDriver: true,
       }).start(() => {
         setMode(choice);
+        // fade in new mode (meditation or gratitude)
+        Animated.timing(modeOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }).start();
       });
     };
 
     return (
+      <View style={{backgroundColor: "#FFF8E7", flex: 1}}>
       <Animated.View
         style={{
           flex: 1,
@@ -343,6 +354,7 @@ export default function MorningScreen() {
           “Every sunrise brings a new beginning.”
         </Text>
       </Animated.View>
+      </View>
     );
   }
 
@@ -356,6 +368,10 @@ export default function MorningScreen() {
     };
 
     return (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View
         style={{
           flex: 1,
@@ -363,7 +379,7 @@ export default function MorningScreen() {
           paddingHorizontal: 20,
           paddingVertical: 40,
         }}
-      >
+        >
         {/* Centered content */}
         <View style={{ flex: 1, justifyContent: "center" }}>
           <Text
@@ -373,22 +389,23 @@ export default function MorningScreen() {
               textAlign: "center",
               marginBottom: 20,
             }}
-          >
+            >
             I am grateful for...
           </Text>
 
           {gratitudeList.map((g, i) => (
             <TextInput
-              key={i}
-              ref={(ref) => (inputRefs.current[i] = ref)}
-              value={g}
-              onChangeText={(text) => {
+            key={i}
+            ref={(ref) => (inputRefs.current[i] = ref)}
+            value={g}
+            onChangeText={(text) => {
                 const newList = [...gratitudeList];
                 newList[i] = text;
                 setGratitudeList(newList);
               }}
               blurOnSubmit={false}
               placeholder={`#${i + 1}`}
+              placeholderTextColor={"#848484"}
               returnKeyType={i === gratitudeList.length - 1 ? "done" : "next"}
               onSubmitEditing={() => handleNextInput(i)} // ✅ go to next input
               style={{
@@ -396,7 +413,7 @@ export default function MorningScreen() {
                 marginVertical: 6,
                 fontSize: 16,
               }}
-            />
+              />
           ))}
         </View>
 
@@ -412,7 +429,7 @@ export default function MorningScreen() {
             height: 50,
             borderRadius: 25,
             alignSelf: "flex-end",
-            right: 10
+            right: 10,
           }}
         >
           <Text
@@ -440,6 +457,7 @@ export default function MorningScreen() {
           }}
         />
       </View>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -450,7 +468,7 @@ export default function MorningScreen() {
 
 
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
+      <Animated.View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000", opacity: modeOpacity }}>
         <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 30, color: "white" }}>
           🧘 Set your meditation time
         </Text>
@@ -592,7 +610,7 @@ export default function MorningScreen() {
             setAlertVisible(false);
           }}
         />
-      </View>
+      </Animated.View>
     );
   }
 }

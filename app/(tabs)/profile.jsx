@@ -52,18 +52,37 @@ export default function Profile() {
       const { data, error } = await supabase
         .from("sleep_logs")
         .select(
-          "sleep_start, duration_hours, gratitude_text, meditation_minutes, created_at"
+          "sleep_start, sleep_end, duration_hours, gratitude_text, meditation_minutes, created_at"
         )
         .eq("user_id", user.id)
         .order("sleep_start", { ascending: false });
 
       if (error) throw error;
 
-      // --- Total Sleep This Week ---
-      const total = data
-        .slice(0, 7)
-        .reduce((sum, d) => sum + (parseFloat(d.duration_hours) || 0), 0);
-      setTotalHours(total);
+      // --- Total Sleep This Week (Monday–Sunday) ---
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ...
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7)); // go back to Monday
+      monday.setHours(0, 0, 0, 0);
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+
+      const weekSleep = data.filter((d) => {
+        const sleepDate = new Date(d.sleep_start);
+        return sleepDate >= monday && sleepDate <= sunday;
+      });
+
+      const totalThisWeek = weekSleep.reduce(
+        (sum, d) => sum + (parseFloat(d.duration_hours) || 0),
+        0
+      );
+      setTotalHours(totalThisWeek);
+
+
+      console.log(totalHours)
 
       // --- Chart Data ---
       const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -130,17 +149,29 @@ export default function Profile() {
 
   function calculateStreak(rows) {
     if (!rows.length) return setStreak(0);
+
+    // Sort oldest → newest
     const sorted = [...rows].sort(
-      (a, b) => new Date(a.sleep_start) - new Date(b.sleep_start)
+      (a, b) => new Date(a.sleep_end) - new Date(b.sleep_end)
     );
+
     let streakCount = 1;
     for (let i = sorted.length - 2; i >= 0; i--) {
-      const d1 = new Date(sorted[i].sleep_start);
-      const d2 = new Date(sorted[i + 1].sleep_start);
-      const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) streakCount++;
-      else if (diffDays > 1) break;
+      const d1 = new Date(sorted[i].sleep_end);
+      const d2 = new Date(sorted[i + 1].sleep_end);
+
+      const diffDays = Math.floor(
+        (d2 - d1) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diffDays === 1) {
+        streakCount++;
+      } else if (diffDays > 1) {
+        // break streak if there's a gap
+        break;
+      }
     }
+
     setStreak(streakCount);
   }
 

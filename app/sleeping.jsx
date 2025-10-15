@@ -34,11 +34,7 @@ export default function Sleeping() {
   const handleWakeUp = async () => {
     const sleepEnd = new Date().toISOString();
     await AsyncStorage.setItem("sleep_end", sleepEnd);
-    setAlertMessage("🌅 Good morning!!\nLet's start your morning routine! 🌞");
-
-    setAlertAction(() => () => router.push("/morning"));
-
-    setAlertVisible(true);
+    router.push("/morning");
   };
 
 

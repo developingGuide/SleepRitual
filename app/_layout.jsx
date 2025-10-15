@@ -52,17 +52,6 @@ export default function Layout() {
     loadFonts();
   }, []);
 
-  useEffect(() => {
-    const requestPermissions = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") {
-        alert("Please enable notifications to get bedtime reminders!");
-      }
-    };
-
-    requestPermissions();
-  }, []);
-
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>

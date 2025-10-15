@@ -58,7 +58,7 @@ export default function Home() {
     const hour = now.getHours();
     let dateToShow = new Date();
 
-    if (hour > 6) dateToShow.setDate(dateToShow.getDate() + 1); //temporary (fix back to < and -)
+    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1); //temporary (fix back to > and + for testing)
     const key = "night_data-" + dateToShow.toDateString();
 
     let saved = await AsyncStorage.getItem(key);
