@@ -1,8 +1,8 @@
 {
   "expo": {
-    "scheme": "SleepRitual",
+    "scheme": "DayAhead",
     "name": "DayAhead",
-    "slug": "SleepRitual",
+    "slug": "dayahead",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Logo.png",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wlsnwah.SleepRitual",
+      "bundleIdentifier": "com.wlsnwah.dayahead",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -30,7 +30,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "package": "com.wlsnwah.SleepRitual"
+      "package": "com.wlsnwah.dayahead"
     },
     "web": {
       "favicon": "./assets/favicon.png"
