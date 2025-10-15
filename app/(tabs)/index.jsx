@@ -204,11 +204,6 @@ export default function Home() {
     });
   };
 
-  const interpolatedColor = bgColor.interpolate({
-    inputRange: [0, 1],
-    outputRange: [currentColor, getColorByTime()],
-  });
-
   const triggerBreathe = (taskText) => {
     const randomQuote = affirmations[Math.floor(Math.random() * affirmations.length)];
     setQuote(randomQuote);
@@ -350,7 +345,7 @@ export default function Home() {
   
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
         <ActivityIndicator size="large" />
         <Text>Loading your bedtime data...</Text>
       </View>
@@ -358,14 +353,8 @@ export default function Home() {
   }
 
   return (
-    <Animated.View
-      style={{
-        flex: 1,
-        padding: 20,
-        backgroundColor: "#1A237E",
-        opacity
-      }}
-    >
+    <View style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+      <Animated.View style={{ flex: 1, opacity }}>
       {data ? (
         <>
           <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 15, color: "#fff", fontFamily: "Manrope-Bold" }}>
@@ -569,6 +558,7 @@ export default function Home() {
           😴 Sleeping Now...
         </Text>
       </TouchableOpacity>
-    </Animated.View>
+      </Animated.View>
+    </View>
   );
 }

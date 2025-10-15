@@ -231,88 +231,118 @@ export default function MorningScreen() {
 
   // ---------------- UI -----------------
   if (!mode) {
+    const handleModeSelect = (choice) => {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 600, // smooth, morning-like fade
+        useNativeDriver: true,
+      }).start(() => {
+        setMode(choice);
+      });
+    };
+
     return (
-      <View
+      <Animated.View
         style={{
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
           padding: 20,
-          backgroundColor: "#FFF7D1",
+          backgroundColor: "#FFF8E7",
+          opacity: opacity, // 🔥 fade control here
         }}
       >
         <Text
           style={{
-            fontSize: 22,
-            marginBottom: 10,
+            fontSize: 28,
             fontFamily: "Manrope-Bold",
-            color: "#333",
+            color: "#2E2A1E",
+            marginBottom: 8,
           }}
         >
-          Good morning!
+          Good morning 🌤️
         </Text>
 
-        <Text style={{ fontSize: 18, marginBottom: 30, color: "#444" }}>
-          Choose a routine!
+        <Text
+          style={{
+            fontSize: 17,
+            color: "#5B564B",
+            fontFamily: "Manrope-Regular",
+            marginBottom: 35,
+          }}
+        >
+          How do you want to begin your day?
         </Text>
 
-        {/* Container for two buttons side by side */}
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-between",
-            width: "90%",
+            justifyContent: "space-evenly",
+            width: "100%",
           }}
         >
-          {/* Gratitude Button */}
+          {/* Gratitude */}
           <TouchableOpacity
-            onPress={() => setMode("gratitude")}
+            onPress={() => handleModeSelect("gratitude")}
             style={{
-              backgroundColor: "#4CAF50",
               flex: 1,
-              aspectRatio: 1, // makes it square
-              borderRadius: 20,
+              aspectRatio: 1,
+              marginHorizontal: 10,
+              borderRadius: 25,
               justifyContent: "center",
               alignItems: "center",
-              marginRight: 10,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 3,
-              elevation: 4,
+              backgroundColor: "#FFE7A0",
             }}
           >
-            <Text style={{ fontSize: 50, marginBottom: 8 }}>📝</Text>
-            <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+            <Text style={{ fontSize: 44, marginBottom: 8 }}>☕</Text>
+            <Text
+              style={{
+                color: "#6B4C00",
+                fontFamily: "Manrope-SemiBold",
+                fontSize: 16,
+              }}
+            >
               Gratitude
             </Text>
           </TouchableOpacity>
 
-          {/* Meditation Button */}
+          {/* Meditation */}
           <TouchableOpacity
-            onPress={() => setMode("meditation")}
+            onPress={() => handleModeSelect("meditation")}
             style={{
-              backgroundColor: "#4CAF50",
               flex: 1,
               aspectRatio: 1,
-              borderRadius: 20,
+              marginHorizontal: 10,
+              borderRadius: 25,
               justifyContent: "center",
               alignItems: "center",
-              marginLeft: 10,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 3,
-              elevation: 4,
+              backgroundColor: "#C7EBD9",
             }}
           >
-            <Text style={{ fontSize: 50, marginBottom: 8 }}>🧘</Text>
-            <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
+            <Text style={{ fontSize: 44, marginBottom: 8 }}>🌿</Text>
+            <Text
+              style={{
+                color: "#184C3C",
+                fontFamily: "Manrope-SemiBold",
+                fontSize: 16,
+              }}
+            >
               Meditation
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+
+        <Text
+          style={{
+            marginTop: 45,
+            color: "#8C8575",
+            fontSize: 15,
+            fontStyle: "italic",
+          }}
+        >
+          “Every sunrise brings a new beginning.”
+        </Text>
+      </Animated.View>
     );
   }
 

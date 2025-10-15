@@ -40,7 +40,7 @@ export default function BedtimePlanner() {
   const router = useRouter();
   const { session } = useContext(AuthContext);
 
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(opacity, {
@@ -133,6 +133,7 @@ export default function BedtimePlanner() {
       <Animated.View 
         style={{
           flex: 1,
+          backgroundColor: "#1A237E",
           opacity, // 👈 bound to animation
         }}
       >
