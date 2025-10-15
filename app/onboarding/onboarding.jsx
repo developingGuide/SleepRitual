@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   SafeAreaView,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -223,6 +224,7 @@ export default function Onboarding() {
         {current.type === "transition" && (
           <View style={styles.container}>
             <Text style={styles.transition_text}>Lucky for you, you will have the option to choose!</Text>
+            <Image style={styles.transition_image} source={require('../../assets/mode_choice.jpg')}/>
             <TouchableOpacity style={styles.button} onPress={nextStep}>
               <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
@@ -304,6 +306,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 25,
+  },
+  transition_image: {
+    width: 200,
+    height: 200,
+    borderRadius: 20,
+    marginBottom: 25
   },
   button: {
     backgroundColor: "#3BE489",
