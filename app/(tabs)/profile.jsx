@@ -87,14 +87,16 @@ export default function Profile() {
       // --- Chart Data ---
       const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const dataMap = {};
-      data.forEach((row) => {
+
+      weekSleep.forEach((row) => {
         const d = new Date(row.sleep_start);
         const day = d.toLocaleDateString("en-US", { weekday: "short" });
-        dataMap[day] = row.duration_hours;
+        dataMap[day] = (dataMap[day] || 0) + parseFloat(row.duration_hours || 0);
       });
+
       const formatted = allDays.map((day) => ({
         label: day,
-        value: parseFloat(dataMap[day]) || 0,
+        value: dataMap[day] || 0,
       }));
       setSleepData(formatted);
 
@@ -150,26 +152,48 @@ export default function Profile() {
   function calculateStreak(rows) {
     if (!rows.length) return setStreak(0);
 
-    // Sort oldest → newest
-    const sorted = [...rows].sort(
-      (a, b) => new Date(a.sleep_end) - new Date(b.sleep_end)
-    );
+    // Filter valid rows with sleep_end
+    const sorted = [...rows]
+      .filter(r => r.sleep_end)
+      .sort((a, b) => new Date(a.sleep_end) - new Date(b.sleep_end));
+
+    if (sorted.length === 0) return setStreak(0);
 
     let streakCount = 1;
+
     for (let i = sorted.length - 2; i >= 0; i--) {
       const d1 = new Date(sorted[i].sleep_end);
       const d2 = new Date(sorted[i + 1].sleep_end);
 
-      const diffDays = Math.floor(
-        (d2 - d1) / (1000 * 60 * 60 * 24)
+      const day1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+      const day2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+
+      const diffDays = Math.round(
+        (day2 - day1) / (1000 * 60 * 60 * 24)
       );
 
       if (diffDays === 1) {
         streakCount++;
       } else if (diffDays > 1) {
-        // break streak if there's a gap
-        break;
+        break; // break streak if a day was skipped
       }
+    }
+
+    // Reset streak if last log isn't from yesterday or today
+    const lastLogDate = new Date(sorted[sorted.length - 1].sleep_end);
+    const today = new Date();
+    const diffFromToday = Math.round(
+      (today - new Date(today.getFullYear(), today.getMonth(), today.getDate())) /
+      (1000 * 60 * 60 * 24)
+    );
+
+    const gap = Math.round(
+      (today - new Date(lastLogDate.getFullYear(), lastLogDate.getMonth(), lastLogDate.getDate())) /
+      (1000 * 60 * 60 * 24)
+    );
+
+    if (gap > 1) {
+      streakCount = 0; // missed yesterday
     }
 
     setStreak(streakCount);

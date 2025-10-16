@@ -123,6 +123,28 @@ export default function BedtimePlanner() {
       } else {
         console.log("No previous plan found — using default.");
       }
+
+
+      // 🧩 Step 4: Fetch unfinished tasks from the most recent todo_list
+      const { data: lastTodoLog, error: lastTodoError } = await supabase
+        .from("sleep_logs")
+        .select("todo_list")
+        .eq("user_id", userId)
+        .not("todo_list", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (lastTodoError) {
+        console.error("Error fetching last todo list:", lastTodoError);
+      } else if (lastTodoLog?.todo_list && Array.isArray(lastTodoLog.todo_list)) {
+        // Filter unfinished ones
+        const unfinished = lastTodoLog.todo_list.filter((t) => !t.done && t.text.trim() !== "");
+        if (unfinished.length > 0) {
+          console.log("Prefilled unfinished tasks:", unfinished);
+          setTodoList([...unfinished, { text: "", done: false }]); // add empty line for new entry
+        }
+      }
     } catch (err) {
       console.error("Unexpected error:", err);
     } finally {
