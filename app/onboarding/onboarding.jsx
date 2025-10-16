@@ -255,11 +255,20 @@ export default function Onboarding() {
               onPress={() => {
                 setOverlay(
                   <PaywallModal
-                    onClose={() => setOverlay(null)}
+                    onClose={async () => {
+                      await supabase.from("user_state").upsert({
+                        user_id: session.user.id,
+                        has_onboarded: true,
+                      })
+
+                      setOverlay(null)
+                    }}
                     onSuccess={async () => {
-                      await supabase.from("user_state").update({
+                      await supabase.from("user_state").upsert({
+                        user_id: session.user.id,
                         has_paid: true,
-                      }).eq("user_id", session.user.id);
+                        has_onboarded: true,
+                      })
                     }}
                   />
                 );
