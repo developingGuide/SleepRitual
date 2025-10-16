@@ -13,6 +13,7 @@
     "@stripe/react-stripe-js": "stripe/react-stripe-js",
     "@stripe/stripe-js": "^8.0.0",
     "@stripe/stripe-react-native": "0.50.3",
+    "@supabase/functions-js": "^2.75.0",
     "@supabase/supabase-js": "^2.58.0",
     "d3-scale": "^4.0.2",
     "dotenv": "^17.2.3",
@@ -36,10 +37,13 @@
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
     "react-native-svg-charts": "^5.4.0",
-    "stripe": "^19.1.0"
+    "stripe": "^19.1.0",
+    "supabase": "^2.51.0"
   },
   "private": true,
   "devDependencies": {
-    "babel-preset-expo": "~54.0.0"
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "~54.0.0",
+    "typescript": "~5.9.2"
   }
 }

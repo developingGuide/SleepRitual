@@ -184,6 +184,7 @@ export default function Sleeping() {
           fontWeight: "600",
           marginBottom: 20,
           color: "#fff",
+          textAlign: "center"
         }}
       >
         {currentMessage}
@@ -213,7 +214,7 @@ export default function Sleeping() {
           }}
         >
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-            🌅 Wake Up
+            Wake Up
           </Text>
         </TouchableOpacity>
       )}

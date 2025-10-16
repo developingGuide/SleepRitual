@@ -7,6 +7,7 @@ import * as Notifications from "expo-notifications";
 
 import { supabase } from "../lib/supabase";
 import AuthProvider, { AuthContext } from "../context/AuthContext";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -64,17 +65,19 @@ export default function Layout() {
     <OverlayContext.Provider value={{ overlay, setOverlay }}>
       <View style={{ flex: 1, backgroundColor: "#1A237E" }}>
         <StatusBar style="auto" />
-        <AuthProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: "fade",
-              presentation: "transparentModal",
-              contentStyle: { backgroundColor: "#1A237E" },
-            }}
-          />
-          <InitialRoute />
-        </AuthProvider>
+        <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
+          <AuthProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: "fade",
+                presentation: "transparentModal",
+                contentStyle: { backgroundColor: "#1A237E" },
+              }}
+            />
+            <InitialRoute />
+          </AuthProvider>
+        </StripeProvider>
 
         {overlay}
       </View>

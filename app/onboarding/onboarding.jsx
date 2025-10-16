@@ -12,6 +12,8 @@ import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
 import * as Notifications from "expo-notifications";
+import PaywallModal from "../../components/PaywallModal";
+import { OverlayContext } from "../_layout";
 
 const steps = [
   {
@@ -94,6 +96,8 @@ export default function Onboarding() {
   const progress = useRef(new Animated.Value(0)).current;
 
   const { session } = useContext(AuthContext);
+  const { setOverlay } = useContext(OverlayContext);
+
 
   // Animate progress bar when step changes
   useEffect(() => {
@@ -246,7 +250,21 @@ export default function Onboarding() {
         {current.type === "end" && (
           <>
             <Text style={styles.description}>{current.description}</Text>
-            <TouchableOpacity style={styles.button} onPress={nextStep}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                setOverlay(
+                  <PaywallModal
+                    onClose={() => setOverlay(null)}
+                    onSuccess={async () => {
+                      await supabase.from("user_state").update({
+                        has_paid: true,
+                      }).eq("user_id", session.user.id);
+                    }}
+                  />
+                );
+              }}
+            >
               <Text style={styles.buttonText}>Start</Text>
             </TouchableOpacity>
           </>
