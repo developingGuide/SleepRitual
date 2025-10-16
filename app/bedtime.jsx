@@ -36,6 +36,7 @@ export default function BedtimePlanner() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertAction, setAlertAction] = useState(null);
   const [alertMessage, setAlertMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const inputRefs = useRef([]);
   const router = useRouter();
   const { session } = useContext(AuthContext);
@@ -49,6 +50,85 @@ export default function BedtimePlanner() {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  useEffect(() => {
+    fetchPrefilledPlan();
+  }, []);
+
+  const fetchPrefilledPlan = async () => {
+    setLoading(true);
+    try {
+      const userId = session.user.id;
+
+      // 🗓 Step 1: Check if today's plan already exists
+      const today = new Date().toISOString().split("T")[0]; // 'YYYY-MM-DD'
+
+      const { data: todayLog, error: todayError } = await supabase
+        .from("sleep_logs")
+        .select("planned_plan, todo_list, created_at")
+        .eq("user_id", userId)
+        .gte("created_at", `${today}T00:00:00`)
+        .lte("created_at", `${today}T23:59:59`)
+        .maybeSingle();
+
+      if (todayError) {
+        console.error("Error fetching today's log:", todayError);
+      }
+
+      if (todayLog?.planned_plan) {
+        console.log("Found today's plan:", todayLog.planned_plan);
+        setPlan(todayLog.planned_plan);
+        setLoading(false);
+        return;
+      }
+
+      // 💎 Step 2: Check if user is premium
+      const { data: userState, error: userError } = await supabase
+        .from("user_state")
+        .select("has_paid")
+        .eq("user_id", userId)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user state:", userError);
+        setLoading(false);
+        return;
+      }
+
+      if (!userState?.has_paid) {
+        console.log("User is not premium — starting with empty planner.");
+        setLoading(false);
+        return;
+      }
+
+      // 🕓 Step 3: Fetch last non-null planned_plan
+      const { data: lastLog, error: logError } = await supabase
+        .from("sleep_logs")
+        .select("planned_plan")
+        .eq("user_id", userId)
+        .not("planned_plan", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (logError) {
+        console.error("Error fetching last plan:", logError);
+        setLoading(false);
+        return;
+      }
+
+      if (lastLog?.planned_plan && Array.isArray(lastLog.planned_plan)) {
+        console.log("Prefilled from last plan:", lastLog.planned_plan);
+        setPlan(lastLog.planned_plan);
+      } else {
+        console.log("No previous plan found — using default.");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const updateTask = (index, text) => {
@@ -124,6 +204,14 @@ export default function BedtimePlanner() {
       return updated;
     });
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
+        <Text style={{ color: "#fff", fontSize: 18 }}>Preparing your planner...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -333,6 +421,30 @@ export default function BedtimePlanner() {
             </TouchableOpacity>
           </View>
         )}
+
+        <TouchableOpacity
+          onPress={() => {
+            setAlertMessage("Clear everything?");
+            setAlertAction(() => () => {
+              if (mode === "planner") setPlan(generateSlots());
+              else setTodoList([{ text: "", done: false }]);
+            });
+            setAlertVisible(true);
+          }}
+          style={{
+            backgroundColor: "transparent",
+            borderWidth: 1,
+            borderColor: "#ff6b6b",
+            padding: 10,
+            borderRadius: 25,
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          <Text style={{ color: "#ff6b6b", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
+            Clear All
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={saveData}

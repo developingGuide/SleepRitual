@@ -84,6 +84,18 @@ export default function Home() {
     else setData(null);
   };
 
+  const saveData = async (newData) => {
+    if (!newData) return;
+
+    const now = new Date();
+    const key = "night_data-" + now.toDateString();
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(newData));
+    } catch (err) {
+      console.log("Error saving updated data:", err);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -444,13 +456,14 @@ export default function Home() {
                   t.text.trim() !== "" && (
                     <TouchableOpacity
                       key={t.id}
-                      onPress={() => {
+                      onPress={async () => {
                         const updated = data.todoList.map((item) =>
                           item.id === t.id ? { ...item, done: !item.done } : item
                         );
 
                         const newData = { ...data, todoList: updated };
                         setData(newData);
+                        await saveData(newData);
 
                         if (!t.done) {
                           // means the user just *completed* it
