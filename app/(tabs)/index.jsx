@@ -64,12 +64,12 @@ export default function Home() {
     // Adjust date if it's early morning (before 6am)
     if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1);
 
-    const dateString = dateToShow.toISOString().split("T")[0]; // YYYY-MM-DD
+    const dateString = dateToShow.toISOString().split("T")[0];
 
-    // 🧭 Fetch latest sleep log for this user for that date
+    // 🧭 Fetch latest sleep log for this user
     const { data: logs, error } = await supabase
       .from("sleep_logs")
-      .select("mode, plan, todo_list")
+      .select("id, mode, plan, todo_list, created_at")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
       .limit(1);
@@ -81,35 +81,63 @@ export default function Home() {
       return;
     }
 
-    if (logs && logs.length > 0) {
-      const log = logs[0];
-      let parsedTodoList = [];
+    // 🪄 If no existing log, create one
+    if (!logs || logs.length === 0) {
+      const { data: newLog, error: insertError } = await supabase
+        .from("sleep_logs")
+        .insert([
+          {
+            user_id: session.user.id,
+            mode: "todo",
+            plan: [],
+            todo_list: [],
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
 
-      // Safely parse todo_list (it might be stored as text or JSON)
-      if (typeof log.todo_list === "string") {
-        try {
-          parsedTodoList = JSON.parse(log.todo_list);
-        } catch {
-          parsedTodoList = [];
-        }
-      } else if (Array.isArray(log.todo_list)) {
-        parsedTodoList = log.todo_list;
+      if (insertError) {
+        console.log("Error creating new log:", insertError.message);
+        setData(null);
+        setLoading(false);
+        return;
       }
 
-      // Assign IDs if missing
-      parsedTodoList = parsedTodoList.map((t, idx) => ({
-        id: t.id || `${Date.now()}-${idx}`,
-        ...t,
-      }));
-
       setData({
-        mode: log.mode || "todo",
-        plan: log.plan || [],
-        todoList: parsedTodoList || [],
+        mode: "todo",
+        plan: [],
+        todoList: [],
       });
-    } else {
-      setData(null);
+
+      setLoading(false);
+      return;
     }
+
+    // ✅ Existing log found
+    const log = logs[0];
+    let parsedTodoList = [];
+
+    if (typeof log.todo_list === "string") {
+      try {
+        parsedTodoList = JSON.parse(log.todo_list);
+      } catch {
+        parsedTodoList = [];
+      }
+    } else if (Array.isArray(log.todo_list)) {
+      parsedTodoList = log.todo_list;
+    }
+
+    parsedTodoList = parsedTodoList.map((t, idx) => ({
+      id: t.id || `${Date.now()}-${idx}`,
+      ...t,
+    }));
+
+    setData({
+      mode: log.mode || "todo",
+      plan: log.plan || [],
+      todoList: parsedTodoList || [],
+    });
 
     setLoading(false);
   };

@@ -282,7 +282,7 @@ export default function BedtimePlanner() {
               key={m}
               onPress={() => setMode(m)}
               style={{
-                backgroundColor: mode === m ? "#4CAF50" : "transparent",
+                backgroundColor: mode === m ? "#4CAF50" : "#1A237E",
                 paddingVertical: 8,
                 paddingHorizontal: 20,
                 borderRadius: 20,
@@ -292,7 +292,7 @@ export default function BedtimePlanner() {
                 zIndex: 100,
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600", fontFamily: "Manrope-Regular", backgroundColor: "#1A237E" }}>
+              <Text style={{ color: "#fff", fontWeight: "600", fontFamily: "Manrope-Regular" }}>
                 {m === "planner" ? "Planner" : "To-Do List"}
               </Text>
             </TouchableOpacity>
