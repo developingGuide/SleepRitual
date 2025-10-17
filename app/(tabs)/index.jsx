@@ -154,6 +154,29 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!session) return; // wait for session to load
+
+    const restoreSleep = async () => {
+      const sleepActive = await AsyncStorage.getItem("sleep_state_active");
+      const sleepStart = await AsyncStorage.getItem("sleep_start");
+
+      if (sleepActive === "true" && sleepStart) {
+        const startTime = new Date(sleepStart).getTime();
+        const now = Date.now();
+        const hours = (now - startTime) / 1000 / 60 / 60;
+
+        // less than 12h = still sleeping, go back to sleeping page
+        if (hours < 12) {
+          router.replace("/sleeping");
+          return;
+        }
+      }
+    };
+
+    restoreSleep();
+  }, []);
+
+  useEffect(() => {
     const checkOnboarding = async () => {
       if (!session?.user) return; // Wait for user session
 
