@@ -54,7 +54,7 @@ export default function Sleeping() {
       const minutes = now.getMinutes();
 
       // If it's 5:00 AM or later → mark as morning
-      if (hours >= 5) {
+      if (hours >= 5 && hours <= 20) {
         setIsMorning(true);
         setCurrentMessage("You’ve slept well.\nLet’s begin today with peace.");
       }
@@ -80,91 +80,6 @@ export default function Sleeping() {
     }, [])
   );
 
-  // ⚙️ AppState background detection
-  useEffect(() => {
-    AsyncStorage.setItem("sleep_state_active", "true");
-
-    const subscription = AppState.addEventListener("change", async (nextState) => {
-      const prevState = appState.current;
-      appState.current = nextState;
-
-      // 🌙 When going background → record time
-      if (prevState.match(/active|inactive/) && nextState === "background") {
-        const now = Date.now();
-        await AsyncStorage.setItem("background_start", String(now));
-        console.log("App went background at", new Date(now).toLocaleTimeString());
-      }
-
-      // 🌅 When returning active → check how long backgrounded
-      if (prevState === "background" && nextState === "active") {
-        const backgroundStart = await AsyncStorage.getItem("background_start");
-        const sleepStart = await AsyncStorage.getItem("sleep_start");
-        if (!backgroundStart || !sleepStart) return;
-
-        const now = Date.now();
-        const backgroundDuration = (now - Number(backgroundStart)) / 1000; // in seconds
-        const sleepDuration = (now - new Date(sleepStart).getTime()) / 1000 / 60; // in minutes
-
-        console.log(
-          `Background duration: ${backgroundDuration}s, Sleep duration: ${sleepDuration}min`
-        );
-
-        // 🕒 If background < 30s → user just checked phone or false trigger
-        if (backgroundDuration < 30) {
-          console.log("Less than 30s background — ignoring");
-          return;
-        }
-
-        // 🕓 If total sleep < 4h → didn't really sleep
-        if (sleepDuration < 1) {
-          console.log("Woke up before 4h — not real sleep");
-          Alert.alert("You didn’t really sleep 😴", "Try to rest properly!");
-          router.replace("/");
-        } else {
-          console.log("Real sleep detected (>4h) — ignoring");
-        }
-      }
-    });
-
-    return () => subscription.remove();
-  }, [session]);
-
-  // ⚡ Cold start detection (phone off or force-close)
-  useEffect(() => {
-    (async () => {
-      const wasSleeping = await AsyncStorage.getItem("sleep_state_active");
-      const sleepStart = await AsyncStorage.getItem("sleep_start");
-
-      if (wasSleeping === "true" && sleepStart) {
-        console.log("Cold start detected — checking sleep state");
-
-        const userId = session?.user?.id;
-        if (!userId) return;
-
-        const sleepStartTime = new Date(sleepStart).getTime();
-        const now = Date.now();
-        const timeDiffMinutes = (now - sleepStartTime) / 1000 / 60;
-
-        // If phone was turned off but sleep is still valid (example: less than 12h)
-        if (timeDiffMinutes < 720) {
-          console.log("Phone turned off during sleep — letting them continue");
-          return; // let them continue
-        }
-
-        // Else — force close detected
-        await supabase
-          .from("sleep_logs")
-          .update({ duration_minutes: 0 })
-          .eq("user_id", userId)
-          .eq("sleep_start", sleepStart);
-
-        await AsyncStorage.multiRemove(["sleep_start", "sleep_state_active"]);
-
-        Alert.alert("You force-closed your sleep 😠", "Try again later.");
-        router.replace("/");
-      }
-    })();
-  }, []);
 
   return (
     <View
