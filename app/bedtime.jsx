@@ -289,9 +289,10 @@ export default function BedtimePlanner() {
                 borderWidth: 1,
                 borderColor: "#4CAF50",
                 marginHorizontal: 5,
+                zIndex: 100,
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "600", fontFamily: "Manrope-Regular" }}>
+              <Text style={{ color: "#fff", fontWeight: "600", fontFamily: "Manrope-Regular", backgroundColor: "#1A237E" }}>
                 {m === "planner" ? "Planner" : "To-Do List"}
               </Text>
             </TouchableOpacity>
@@ -461,6 +462,7 @@ export default function BedtimePlanner() {
             borderRadius: 25,
             alignItems: "center",
             marginBottom: 10,
+            backgroundColor: "#1A237E",
           }}
         >
           <Text style={{ color: "#ff6b6b", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>

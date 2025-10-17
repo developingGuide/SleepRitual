@@ -54,45 +54,84 @@ export default function Home() {
 
   // 🧠 Load data (either planner or to-do)
   const loadData = async () => {
+    if (!session?.user) return;
+
+    setLoading(true);
     const now = new Date();
     const hour = now.getHours();
     let dateToShow = new Date();
 
-    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1); //temporary (fix back to > and + for testing)
-    const key = "night_data-" + dateToShow.toDateString();
+    // Adjust date if it's early morning (before 6am)
+    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1);
 
-    let saved = await AsyncStorage.getItem(key);
+    const dateString = dateToShow.toISOString().split("T")[0]; // YYYY-MM-DD
 
-    // fallback to yesterday if early morning
-    if (!saved && hour < 6) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      saved = await AsyncStorage.getItem("night_data-" + yesterday.toDateString());
+    // 🧭 Fetch latest sleep log for this user for that date
+    const { data: logs, error } = await supabase
+      .from("sleep_logs")
+      .select("mode, plan, todo_list")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.log("Error fetching sleep log:", error.message);
+      setData(null);
+      setLoading(false);
+      return;
     }
 
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Give each todo an ID if it doesn’t have one
-      if (parsed.todoList) {
-        parsed.todoList = parsed.todoList.map((t, idx) => ({
-          id: t.id || `${Date.now()}-${idx}`,
-          ...t,
-        }));
+    if (logs && logs.length > 0) {
+      const log = logs[0];
+      let parsedTodoList = [];
+
+      // Safely parse todo_list (it might be stored as text or JSON)
+      if (typeof log.todo_list === "string") {
+        try {
+          parsedTodoList = JSON.parse(log.todo_list);
+        } catch {
+          parsedTodoList = [];
+        }
+      } else if (Array.isArray(log.todo_list)) {
+        parsedTodoList = log.todo_list;
       }
-      setData(parsed);
+
+      // Assign IDs if missing
+      parsedTodoList = parsedTodoList.map((t, idx) => ({
+        id: t.id || `${Date.now()}-${idx}`,
+        ...t,
+      }));
+
+      setData({
+        mode: log.mode || "todo",
+        plan: log.plan || [],
+        todoList: parsedTodoList || [],
+      });
+    } else {
+      setData(null);
     }
-    else setData(null);
+
+    setLoading(false);
   };
 
   const saveData = async (newData) => {
+    if (!session?.user) return;
     if (!newData) return;
 
-    const now = new Date();
-    const key = "night_data-" + now.toDateString();
-    try {
-      await AsyncStorage.setItem(key, JSON.stringify(newData));
-    } catch (err) {
-      console.log("Error saving updated data:", err);
+    const { data: latest } = await supabase
+      .from("sleep_logs")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (latest) {
+      const { error } = await supabase
+        .from("sleep_logs")
+        .update({ todo_list: newData.todoList })
+        .eq("id", latest.id);
+      if (error) console.log("Error saving:", error.message);
     }
   };
 

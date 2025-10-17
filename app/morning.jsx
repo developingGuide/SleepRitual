@@ -9,9 +9,11 @@ import {
   Vibration,
   PanResponder,
   Animated,
-  Platform
+  Platform,
+  KeyboardAvoidingView,
+  BackHandler
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAudioPlayer } from "expo-audio";
 import { supabase } from "../lib/supabase";
@@ -19,7 +21,6 @@ import { AuthContext } from "../context/AuthContext";
 import Svg, { Circle } from "react-native-svg";
 import CustomAlert from "../components/CustomAlert";
 import { Ionicons } from "@expo/vector-icons";
-import { KeyboardAvoidingView } from "react-native";
 
 export default function MorningScreen() {
   const [mode, setMode] = useState(null);
@@ -59,6 +60,25 @@ export default function MorningScreen() {
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (mode !== null) {
+          // 🟢 Go back to mode selection instead of previous page
+          setMode(null);
+          return true; // prevent default navigation
+        }
+        return false; // allow default behavior if already at mode select
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () => {
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      };
+    }, [mode])
+  );
 
   const panResponder = useRef(
     PanResponder.create({
@@ -154,7 +174,7 @@ export default function MorningScreen() {
       setAlertMessage("✨ Morning complete!\nLet's start the day! 🌞");
 
       // ✅ set navigation callback after save
-      setAlertAction(() => () => router.push("/"));
+      setAlertAction(() => () => router.replace("/"));
 
       setAlertVisible(true);
     } catch (err) {
@@ -188,7 +208,7 @@ export default function MorningScreen() {
           setAlertMessage("✨ Meditation complete!\nHope you feel centered 🌞");
 
           // Store navigation as a callback (not executed yet)
-          setAlertAction(() => () => router.push("/"));
+          setAlertAction(() => () => router.replace("/"));
 
           setAlertVisible(true);
           finishMorningRoutine({ meditation_minutes: formattedMinutes });
