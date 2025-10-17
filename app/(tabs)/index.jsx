@@ -20,6 +20,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [bgColor] = useState(new Animated.Value(0));
   const [now, setNow] = useState(new Date());
+  const [currentLogId, setCurrentLogId] = useState()
   const router = useRouter();
   const listRef = useRef(null);
 
@@ -57,109 +58,70 @@ export default function Home() {
     if (!session?.user) return;
 
     setLoading(true);
-    const now = new Date();
-    const hour = now.getHours();
-    let dateToShow = new Date();
 
-    // Adjust date if it's early morning (before 6am)
-    if (hour < 6) dateToShow.setDate(dateToShow.getDate() - 1);
-
-    const dateString = dateToShow.toISOString().split("T")[0];
-
-    // 🧭 Fetch latest sleep log for this user
-    const { data: logs, error } = await supabase
-      .from("sleep_logs")
-      .select("id, mode, plan, todo_list, created_at")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (error) {
-      console.log("Error fetching sleep log:", error.message);
-      setData(null);
-      setLoading(false);
-      return;
-    }
-
-    // 🪄 If no existing log, create one
-    if (!logs || logs.length === 0) {
-      const { data: newLog, error: insertError } = await supabase
+    try {
+      const { data: logs, error } = await supabase
         .from("sleep_logs")
-        .insert([
-          {
-            user_id: session.user.id,
-            mode: "todo",
-            plan: [],
-            todo_list: [],
-            created_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single();
+        .select("id, todo_list, planned_plan, created_at")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-      if (insertError) {
-        console.log("Error creating new log:", insertError.message);
+      if (error) {
+        console.log("Error fetching sleep log:", error.message);
         setData(null);
-        setLoading(false);
         return;
       }
 
-      setData({
-        mode: "todo",
-        plan: [],
-        todoList: [],
-      });
-
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Existing log found
-    const log = logs[0];
-    let parsedTodoList = [];
-
-    if (typeof log.todo_list === "string") {
-      try {
-        parsedTodoList = JSON.parse(log.todo_list);
-      } catch {
-        parsedTodoList = [];
+      if (!logs || logs.length === 0) {
+        setData(null);
+        return;
       }
-    } else if (Array.isArray(log.todo_list)) {
-      parsedTodoList = log.todo_list;
+
+      const latestLog = logs[0];
+      setCurrentLogId(latestLog.id); // store for later updates
+
+      const hasTodo = Array.isArray(latestLog.todo_list) && latestLog.todo_list.length > 0;
+      const hasPlan = Array.isArray(latestLog.planned_plan) && latestLog.planned_plan.length > 0;
+
+      let parsed = null;
+
+      if (hasPlan) {
+        parsed = {
+          mode: "planner",
+          plan: latestLog.planned_plan,
+        };
+      } else if (hasTodo) {
+        parsed = {
+          mode: "todo",
+          todoList: latestLog.todo_list.map((t, idx) => ({
+            id: t.id || `${Date.now()}-${idx}`,
+            ...t,
+          })),
+        };
+      }
+
+      setData(parsed);
+    } catch (err) {
+      console.log("Unexpected error loading data:", err);
+    } finally {
+      setLoading(false);
     }
-
-    parsedTodoList = parsedTodoList.map((t, idx) => ({
-      id: t.id || `${Date.now()}-${idx}`,
-      ...t,
-    }));
-
-    setData({
-      mode: log.mode || "todo",
-      plan: log.plan || [],
-      todoList: parsedTodoList || [],
-    });
-
-    setLoading(false);
   };
 
   const saveData = async (newData) => {
-    if (!session?.user) return;
-    if (!newData) return;
+    if (!session?.user || !currentLogId) return;
 
-    const { data: latest } = await supabase
-      .from("sleep_logs")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (latest) {
+    try {
       const { error } = await supabase
         .from("sleep_logs")
         .update({ todo_list: newData.todoList })
-        .eq("id", latest.id);
-      if (error) console.log("Error saving:", error.message);
+        .eq("id", currentLogId)
+        .eq("user_id", session.user.id);
+
+      if (error) console.log("Error saving todo list:", error.message);
+    } catch (err) {
+      console.log("Unexpected error saving:", err);
     }
   };
 
@@ -531,6 +493,13 @@ export default function Home() {
                         const newData = { ...data, todoList: updated };
                         setData(newData);
                         await saveData(newData);
+
+                        await supabase
+                          .from("sleep_logs")
+                          .update({ todo_list: newData.todoList })
+                          .eq("user_id", session.user.id)
+                          .order("created_at", { ascending: false })
+                          .limit(1);
 
                         if (!t.done) {
                           // means the user just *completed* it
