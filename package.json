@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@stripe/react-stripe-js": "stripe/react-stripe-js",
     "@stripe/stripe-js": "^8.0.0",
     "@stripe/stripe-react-native": "0.50.3",

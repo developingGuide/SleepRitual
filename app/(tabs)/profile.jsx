@@ -286,7 +286,10 @@ export default function Profile() {
         {/* --- HISTORY SECTION --- */}
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => setShowAllHistory((p) => !p)}
+          onPress={() => router.push({
+            pathname: "/history",
+            params: { type: activeTab },
+          })}
           style={styles.historyBox}
         >
           <View style={styles.tabsRow}>

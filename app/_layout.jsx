@@ -8,6 +8,7 @@ import * as Notifications from "expo-notifications";
 import { supabase } from "../lib/supabase";
 import AuthProvider, { AuthContext } from "../context/AuthContext";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import { usePathname } from "expo-router";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,6 +21,8 @@ Notifications.setNotificationHandler({
 function InitialRoute() {
   const { session, loading } = useContext(AuthContext);
 
+  const pathname = usePathname();
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
@@ -29,7 +32,7 @@ function InitialRoute() {
   }
 
   // 🔥 Redirect based on login status
-  if (session) {
+  if (session && pathname !== "/sleeping" && pathname !== "/morning") {
     return <Redirect href="/" />;
   } else {
     return <Redirect href="/(auth)/login" />;
