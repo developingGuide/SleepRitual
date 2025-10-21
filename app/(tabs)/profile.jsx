@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart } from "react-native-gifted-charts";
 import { useFocusEffect, useRouter } from "expo-router";
+import CustomAlert from "../../components/CustomAlert";
 
 export default function Profile() {
   const { bgColor, textColor } = useTheme();
@@ -24,6 +25,11 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("gratitude");
   const [loading, setLoading] = useState(true);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertAction, setAlertAction] = useState("");
 
   const router = useRouter();
 
@@ -48,6 +54,16 @@ export default function Profile() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // 🟢 Fetch user_state
+      const { data: userState, error: stateError } = await supabase
+        .from("user_state")
+        .select("has_paid")
+        .eq("user_id", user.id)
+        .single();
+
+      if (stateError) console.log("User state fetch error:", stateError);
+      setHasPaid(userState?.has_paid || false);
 
       const { data, error } = await supabase
         .from("sleep_logs")
@@ -286,10 +302,18 @@ export default function Profile() {
         {/* --- HISTORY SECTION --- */}
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => router.push({
-            pathname: "/history",
-            params: { type: activeTab },
-          })}
+          onPress={() => {
+            if (!hasPaid) {
+              setAlertMessage("🌙 Upgrade to unlock full history!")
+
+              setAlertVisible(true)
+              return;
+            }
+            router.push({
+              pathname: "/history",
+              params: { type: activeTab },
+            })
+          }}
           style={styles.historyBox}
         >
           <View style={styles.tabsRow}>
@@ -321,9 +345,19 @@ export default function Profile() {
 
           {((activeTab === "gratitude" && gratitudeHistory.length > 3) ||
             (activeTab === "meditation" && meditationHistory.length > 3)) && (
-            <Text style={styles.showMoreText}>
-              {showAllHistory ? "Tap to show less ▲" : "Tap to see more ▼"}
-            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (!hasPaid) {
+                  alert("🌙 Upgrade to unlock full history!");
+                  return;
+                }
+                setShowAllHistory(!showAllHistory);
+              }}
+            >
+              <Text style={styles.showMoreText}>
+                {showAllHistory ? "Tap to show less ▲" : "Tap to see more ▼"}
+              </Text>
+            </TouchableOpacity>
           )}
         </TouchableOpacity>
 
@@ -333,6 +367,22 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          setAlertAction(null);
+        }}
+        onConfirm={() => {
+          if (alertAction) {
+            alertAction(); // ✅ safely call stored function
+            setAlertAction(null);
+          }
+          setAlertVisible(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

@@ -1,13 +1,15 @@
 import { useEffect, useState, useContext, createContext } from "react";
-import { Stack, Redirect, usePathname } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { View, ActivityIndicator } from "react-native";
 import { StatusBar } from "react-native";
 import * as Font from "expo-font";
 import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { supabase } from "../lib/supabase";
 import AuthProvider, { AuthContext } from "../context/AuthContext";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import { usePathname } from "expo-router";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -16,6 +18,33 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+function InitialRoute() {
+  const { session, loading } = useContext(AuthContext);
+  const [initialPath, setInitialPath] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const savedRoute = await AsyncStorage.getItem("last_route");
+      setInitialPath(savedRoute || "/");
+    })();
+  }, []);
+
+  if (loading || initialPath === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+      </View>
+    );
+  }
+
+  // 🔥 Redirect based on login status
+  if (session) {
+    return <Redirect href={initialPath} />;
+  } else {
+    return <Redirect href="/(auth)/login" />;
+  }
+}
 
 export const OverlayContext = createContext();
 
@@ -27,7 +56,7 @@ export default function Layout() {
     const loadFonts = async () => {
       await Font.loadAsync({
         "Manrope-Regular": require("../assets/fonts/Manrope-Regular.ttf"),
-        "Manrope-Bold": require("../assets/fonts/Manrope-Bold.ttf"),
+        "Manrope-Bold": require("../assets/fonts/Manrope-Bold.ttf")
       });
       setFontsLoaded(true);
     };
@@ -36,14 +65,7 @@ export default function Layout() {
 
   if (!fontsLoaded) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#1A237E",
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
         <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
@@ -55,54 +77,20 @@ export default function Layout() {
         <StatusBar style="auto" />
         <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
           <AuthProvider>
-            <AuthGate>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: "fade",
-                  presentation: "transparentModal",
-                  contentStyle: { backgroundColor: "#1A237E" },
-                }}
-              />
-            </AuthGate>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: "fade",
+                presentation: "transparentModal",
+                contentStyle: { backgroundColor: "#1A237E" },
+              }}
+            />
+            <InitialRoute />
           </AuthProvider>
         </StripeProvider>
+
         {overlay}
       </View>
     </OverlayContext.Provider>
   );
-}
-
-// 🔐 AuthGate ensures only logged-in users access protected routes
-function AuthGate({ children }) {
-  const { session, loading } = useContext(AuthContext);
-  const pathname = usePathname();
-
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#1A237E",
-        }}
-      >
-        <ActivityIndicator size="large" color="#6C63FF" />
-      </View>
-    );
-  }
-
-  // If not logged in → send to login
-  if (!session && !pathname.startsWith("/login") && !pathname.startsWith("/signup")) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  // If logged in but on login/register pages → send home
-  if (session && pathname.startsWith("/login") && !pathname.startsWith("/signup")) {
-    return <Redirect href="/" />;
-  }
-
-  // ✅ Otherwise, render normally
-  return children;
 }

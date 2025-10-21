@@ -65,6 +65,10 @@ export default function Sleeping() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    AsyncStorage.setItem("last_route", "/sleeping");
+  }, []);
+
   // 🚫 Back button block
   useFocusEffect(
     useCallback(() => {
