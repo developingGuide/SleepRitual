@@ -183,6 +183,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    AsyncStorage.setItem("last_route", "/");
+  }, []);
+
+  useEffect(() => {
     const checkOnboarding = async () => {
       if (!session?.user) return; // Wait for user session
 

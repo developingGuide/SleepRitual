@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Easing } from "react-native";
 import { useStripe } from "@stripe/stripe-react-native";
 
 export default function PaywallModal({ onClose, onSuccess }) {
@@ -28,7 +28,7 @@ export default function PaywallModal({ onClose, onSuccess }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({ amount: 500 }), // $5 example
+          body: JSON.stringify({ amount: 2000 }), // $20 example
         }
       );
 
@@ -58,30 +58,72 @@ export default function PaywallModal({ onClose, onSuccess }) {
     }
   };
 
+  const proFeatures = [
+    "Everything in Free",
+    "View previous days journal",
+    "Your AI coach",
+    "Themes and custom sounds",
+    "Widget of today’s plan/to-do",
+    "Prefill Planner or Unfinished to-do from previous day",
+    "Full timeline view of week/month with export",
+  ];
+
+  const freeFeatures = [
+    "Night time 'Plan tomorrow today",
+    "Morning gratitude journaling",
+    "Home screen planner/to-do list",
+    "Evening Reminders",
+    "Streaks",
+    "Basic weekly graph"
+  ];
+
   return (
-    <Animated.View style={[styles.overlay, { transform: [{ translateY }] }]}>
-      <View style={styles.card}>
-        <TouchableOpacity style={styles.close} onPress={onClose}>
-          <Text style={{ color: "#999", fontSize: 20 }}>✕</Text>
-        </TouchableOpacity>
+    <Animated.View style={[styles.fullScreen, { transform: [{ translateY }] }]}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Unlock DayAhead Pro</Text>
+      </View>
 
-        <Text style={styles.title}>Unlock DayAhead Pro</Text>
-        <Text style={styles.subtitle}>
-          Support the app and unlock future updates for just $5!
-        </Text>
+      <ScrollView
+        style={{ flex: 1, width: "100%" }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.priceText}>$20 Lifetime</Text>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🌿 Pro Features</Text>
+          {proFeatures.map((item, i) => (
+            <View key={i} style={styles.featureRow}>
+              <Text style={styles.tick}>✅</Text>
+              <Text style={styles.featureText}>{item}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>✨ Core Features</Text>
+          {freeFeatures.map((item, i) => (
+            <View key={i} style={styles.featureRow}>
+              <Text style={styles.tick}>✅</Text>
+              <Text style={styles.featureText}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      <View style={styles.bottomActions}>
         <TouchableOpacity
           style={[styles.button, loading && { opacity: 0.6 }]}
           onPress={openPaymentSheet}
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? "Loading..." : "Upgrade for $5"}
+            {loading ? "Loading..." : "Upgrade to Pro"}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onClose} style={{ marginTop: 15 }}>
-          <Text style={{ color: "#aaa", fontSize: 15 }}>Maybe later</Text>
+          <Text style={styles.laterText}>Maybe later</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -89,39 +131,75 @@ export default function PaywallModal({ onClose, onSuccess }) {
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  fullScreen: {
     position: "absolute",
-    bottom: 0,
+    top: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(10, 14, 39, 0.95)",
-    padding: 30,
+    bottom: 0,
+    backgroundColor: "rgba(10, 14, 39, 0.97)",
     alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 50,
+    zIndex: 999,
   },
-  card: {
-    backgroundColor: "#12173D",
-    borderRadius: 20,
-    padding: 25,
+  header: {
     width: "100%",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    marginBottom: 10,
   },
-  close: {
+  closeText: {
     position: "absolute",
-    top: 10,
-    right: 15,
-    padding: 10,
+    left: 5,
+    color: "#aaa",
+    fontSize: 22,
   },
-  title: {
+  headerTitle: {
     color: "white",
     fontSize: 22,
     fontWeight: "700",
+  },
+  priceText: {
+    color: "#3BE489",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 25,
+  },
+  section: {
+    width: "90%",
+    alignSelf: "center",
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 15,
+  },
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 10,
   },
-  subtitle: {
+  tick: {
+    color: "#3BE489",
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  featureText: {
     color: "#ccc",
     fontSize: 15,
-    textAlign: "center",
-    marginBottom: 30,
+    flex: 1,
+  },
+  bottomActions: {
+    position: "absolute",
+    bottom: 40,
+    width: "90%",
+    alignItems: "center",
   },
   button: {
     backgroundColor: "#3BE489",
@@ -134,5 +212,9 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "700",
     fontSize: 16,
+  },
+  laterText: {
+    color: "#aaa",
+    fontSize: 15,
   },
 });

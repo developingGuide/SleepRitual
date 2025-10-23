@@ -55,6 +55,10 @@ export default function MorningScreen() {
     }).start();
   }, []);
 
+  useEffect(() => {
+    AsyncStorage.setItem("last_route", "/morning");
+  }, []);
+
   // Meditation Wheel Logic
   useEffect(() => {
     return () => clearInterval(intervalRef.current);

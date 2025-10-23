@@ -55,6 +55,10 @@ export default function BedtimePlanner() {
     fetchPrefilledPlan();
   }, []);
 
+  useEffect(() => {
+    AsyncStorage.setItem("last_route", "/bedtime");
+  }, []);
+
   const fetchPrefilledPlan = async () => {
     setLoading(true);
     try {
