@@ -237,7 +237,7 @@ export default function MorningScreen() {
   };
 
   // ---------------- UI -----------------
-  if (!mode) {
+  if (!mode || mode === null) {
     const handleModeSelect = (choice) => {
       // fade out bright screen
       Animated.timing(opacity, {
@@ -383,7 +383,36 @@ export default function MorningScreen() {
           paddingHorizontal: 20,
           paddingVertical: 40,
         }}
+      >
+        <TouchableOpacity
+          onPress={() => {
+            // fade out current mode first
+            Animated.timing(modeOpacity, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: true,
+            }).start(() => {
+              // switch back to mode select
+              setMode(null);
+              // fade in the main screen again
+              Animated.timing(opacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }).start();
+            });
+          }}
+          style={{
+            position: "absolute",
+            top: 15,
+            left: 15,
+            zIndex: 10,
+            padding: 8,
+          }}
         >
+          <Ionicons name="chevron-back" size={26} color="#000" />
+        </TouchableOpacity>
+
         {/* Centered content */}
         <View style={{ flex: 1, justifyContent: "center" }}>
           <Text
@@ -473,6 +502,35 @@ export default function MorningScreen() {
 
     return (
       <Animated.View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000", opacity: modeOpacity }}>
+        <TouchableOpacity
+          onPress={() => {
+            // fade out current mode first
+            Animated.timing(modeOpacity, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }).start(() => {
+              // switch back to mode select
+              setMode(null);
+              // fade in the main screen again
+              Animated.timing(opacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }).start();
+            });
+          }}
+          style={{
+            position: "absolute",
+            top: 15,
+            left: 15,
+            zIndex: 10,
+            padding: 8,
+          }}
+        >
+          <Ionicons name="chevron-back" size={26} color="#fff" />
+        </TouchableOpacity>
+
         <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 30, color: "white" }}>
           🧘 Set your meditation time
         </Text>

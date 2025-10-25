@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeProvider, useTheme } from "../../context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "react-native";
 
 function TabLayout() {
   const { bgColor } = useTheme();
@@ -20,7 +21,7 @@ function TabLayout() {
           paddingTop: 6,
           height: 60,
         },
-        animation: "fade",
+        animation: "none",
       }}
     >
       <Tabs.Screen
@@ -32,16 +33,6 @@ function TabLayout() {
           ),
         }}
       />
-
-      {/* <Tabs.Screen
-        name="competition"
-        options={{
-          title: "Competition",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy-outline" color={color} size={size} />
-          ),
-        }}
-      /> */}
 
       <Tabs.Screen
         name="profile"
@@ -67,8 +58,10 @@ export default function RootLayout() {
 function ThemedApp() {
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#1A237E" }}>
-      <TabLayout />
-    </SafeAreaView>
+    <View style={{ flex: 1, backgroundColor: "#1A237E" }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <TabLayout />
+      </SafeAreaView>
+    </View>
   );
 }

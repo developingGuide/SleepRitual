@@ -1,4 +1,4 @@
-import { useState, useRef, useContext, useEffect } from "react";
+import { useState, useRef, useContext, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { AuthContext } from "../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,13 +43,16 @@ export default function BedtimePlanner() {
 
   const opacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      opacity.setValue(0); // reset first
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }, [])
+  );
 
   useEffect(() => {
     fetchPrefilledPlan();
@@ -210,7 +213,7 @@ export default function BedtimePlanner() {
       setTimeout(() => {
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 400,
+          duration: 500,
           useNativeDriver: true,
         }).start(() => router.push("/sleeping"));
       }, 100);
@@ -254,7 +257,7 @@ export default function BedtimePlanner() {
 
       <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace('/')}
           style={{
             position: "absolute",
             top: 15,

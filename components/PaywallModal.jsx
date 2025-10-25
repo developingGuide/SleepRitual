@@ -59,13 +59,13 @@ export default function PaywallModal({ onClose, onSuccess }) {
   };
 
   const proFeatures = [
-    "Everything in Free",
-    "View previous days journal",
-    "Your AI coach",
-    "Themes and custom sounds",
-    "Widget of today’s plan/to-do",
-    "Prefill Planner or Unfinished to-do from previous day",
-    "Full timeline view of week/month with export",
+    "Includes all Free features",
+    "See past journals",
+    "AI coach support",
+    "Themes & custom sounds",
+    "Home widget for today’s plan",
+    "Auto-fill from yesterday’s tasks",
+    "Full timeline view + export",
   ];
 
   const freeFeatures = [
@@ -100,7 +100,7 @@ export default function PaywallModal({ onClose, onSuccess }) {
           ))}
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>✨ Core Features</Text>
           {freeFeatures.map((item, i) => (
             <View key={i} style={styles.featureRow}>
@@ -108,7 +108,7 @@ export default function PaywallModal({ onClose, onSuccess }) {
               <Text style={styles.featureText}>{item}</Text>
             </View>
           ))}
-        </View>
+        </View> */}
       </ScrollView>
 
       <View style={styles.bottomActions}>
@@ -175,25 +175,26 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     marginBottom: 15,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   tick: {
     color: "#3BE489",
     fontSize: 16,
     marginRight: 8,
-    marginTop: 2,
+    marginTop: 4,
   },
   featureText: {
     color: "#ccc",
-    fontSize: 15,
-    flex: 1,
+    fontSize: 20,
+    width: "90%",
+    fontFamily: "Manrope-Bold",
   },
   bottomActions: {
     position: "absolute",

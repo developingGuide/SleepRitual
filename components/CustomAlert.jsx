@@ -1,21 +1,46 @@
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Modal
+  Modal,
+  Animated,
+  StatusBar,
 } from "react-native";
 
 export default function CustomAlert({ visible, message, onClose, onConfirm }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Reset immediately when closing
+      fadeAnim.setValue(0);
+    }
+  }, [visible]);
+
   if (!visible) return null;
 
   const handleClose = () => {
-    if (onConfirm) onConfirm(); // run custom callback
-    onClose(); // close modal afterward
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      if (onConfirm) onConfirm();
+      onClose();
+    });
   };
 
   return (
-    <Modal transparent visible={visible} animationType="fade">
-      <View
+    <Modal transparent visible={visible} animationType="none">
+      <Animated.View
         style={{
           position: "absolute",
           top: 0,
@@ -25,20 +50,16 @@ export default function CustomAlert({ visible, message, onClose, onConfirm }) {
           backgroundColor: "rgba(0,0,0,0.6)",
           justifyContent: "center",
           alignItems: "center",
-          zIndex: 999,
+          opacity: fadeAnim,
         }}
       >
-        <View
+        <StatusBar style="auto" />
+        <Animated.View
           style={{
             backgroundColor: "#222",
             padding: 25,
             borderRadius: 16,
             width: "80%",
-            shadowColor: "#000",
-            shadowOpacity: 0.5,
-            shadowOffset: { width: 0, height: 3 },
-            shadowRadius: 5,
-            elevation: 10,
           }}
         >
           <Text
@@ -52,6 +73,7 @@ export default function CustomAlert({ visible, message, onClose, onConfirm }) {
           >
             {message}
           </Text>
+
           <TouchableOpacity
             onPress={handleClose}
             style={{
@@ -71,8 +93,8 @@ export default function CustomAlert({ visible, message, onClose, onConfirm }) {
               OK
             </Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

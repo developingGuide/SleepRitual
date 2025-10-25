@@ -6,7 +6,8 @@ import {
   Alert,
   BackHandler,
   AppState,
-  Animated
+  Animated,
+  StyleSheet
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../lib/supabase";
@@ -30,11 +31,23 @@ export default function Sleeping() {
 
   const opacity = useRef(new Animated.Value(1)).current;
 
+  const morningFade = useRef(new Animated.Value(0)).current; // 👈 overlay opacity
+  const [showMorningOverlay, setShowMorningOverlay] = useState(false);
+
   // ✅ Wake up handler
   const handleWakeUp = async () => {
     const sleepEnd = new Date().toISOString();
     await AsyncStorage.setItem("sleep_end", sleepEnd);
-    router.push("/morning");
+    
+    // 👇 Start overlay fade animation
+    setShowMorningOverlay(true);
+    Animated.timing(morningFade, {
+      toValue: 1,
+      duration: 1200, // slower fade looks calmer
+      useNativeDriver: true,
+    }).start(() => {
+      router.push("/morning");
+    });
   };
 
 
@@ -153,6 +166,19 @@ export default function Sleeping() {
           setAlertVisible(false);
         }}
       />
+
+      {showMorningOverlay && (
+        <Animated.View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "#FFF8E7", // same color as morning page
+            opacity: morningFade,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+        </Animated.View>
+      )}
     </View>
   );
 }

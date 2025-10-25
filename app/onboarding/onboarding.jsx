@@ -27,7 +27,7 @@ const steps = [
     type: "question",
     title: "What brings you to the app?",
     options: ["Increase Mood", "Track Sleep", "Have a better routine", "I'm not sure"],
-    key: "before_bed",
+    key: "from_where",
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ const steps = [
     type: "question",
     title: "What night-time routine have you tried?",
     options: ["Read", "Meditate", "Plan next day", "Neither 😅"],
-    key: "before_bed",
+    key: "night_routine",
   },
   {
     type: "question",
@@ -53,19 +53,19 @@ const steps = [
     type: "question",
     title: "How long do you want to sleep for?",
     options: ["7 Hours", "8 Hours", "9 Hours", "Any amount of hours"],
-    key: "sleep_time",
+    key: "sleep_duration",
   },
   {
     type: "question",
     title: "What morning routine have you tried?",
     options: ["Gratitude Journaling", "Stretching", "Meditation", "Neither 😬"],
-    key: "sleep_time",
+    key: "morning_routine",
   },
   {
     type: "question",
     title: "What do you want to do first thing in the morning?",
     options: ["Gratitude Journaling", "Stretching", "Meditation", "I don't mind any"],
-    key: "sleep_time",
+    key: "first_thing",
   },
   {
     type: "transition"
@@ -168,7 +168,7 @@ export default function Onboarding() {
   };
 
   const skipOnboarding = () => {
-    router.replace("/");
+    nextStep();
   };
 
   const progressWidth = progress.interpolate({
@@ -268,7 +268,9 @@ export default function Onboarding() {
                         user_id: session.user.id,
                         has_paid: true,
                         has_onboarded: true,
-                      })
+                      },
+                      { onConflict: ["user_id"] }
+                    )
                     }}
                   />
                 );
