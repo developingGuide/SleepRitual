@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Easing } from "react-native";
 import { useStripe } from "@stripe/stripe-react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
+import CustomAlert from "./CustomAlert";
 
 export default function PaywallModal({ onClose, onSuccess }) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [loading, setLoading] = useState(false);
-  const translateY = new Animated.Value(300);
+  
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const translateY = useRef(new Animated.Value(300)).current;
+
 
   React.useEffect(() => {
     Animated.timing(translateY, {
@@ -46,9 +54,18 @@ export default function PaywallModal({ onClose, onSuccess }) {
         const { error } = await presentPaymentSheet();
         if (error) alert(`Payment failed: ${error.message}`);
         else {
-          alert("Payment successful! 🎉");
+          setShowConfetti(true);
+          setAlertMessage("Payment successful! 🎉 You’re now a Pro user.");
+          setAlertVisible(true);
+
+          // update DB
           onSuccess?.();
-          onClose?.();
+
+          // delay close so confetti can show
+          setTimeout(() => {
+            setShowConfetti(false);
+            onClose?.();
+          }, 3500);
         }
       }
     } catch (err) {
@@ -91,7 +108,7 @@ export default function PaywallModal({ onClose, onSuccess }) {
         <Text style={styles.priceText}>$20 Lifetime</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌿 Pro Features</Text>
+          {/* <Text style={styles.sectionTitle}>🌿 Pro Features</Text> */}
           {proFeatures.map((item, i) => (
             <View key={i} style={styles.featureRow}>
               <Text style={styles.tick}>✅</Text>
@@ -126,6 +143,24 @@ export default function PaywallModal({ onClose, onSuccess }) {
           <Text style={styles.laterText}>Maybe later</Text>
         </TouchableOpacity>
       </View>
+
+      {showConfetti && (
+        <ConfettiCannon
+          count={60}
+          origin={{ x: 200, y: 0 }}
+          autoStart={true}
+          fadeOut={true}
+        />
+      )}
+
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        onConfirm={() => {
+          setAlertVisible(false);
+        }}
+      />
     </Animated.View>
   );
 }

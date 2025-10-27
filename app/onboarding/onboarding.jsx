@@ -20,7 +20,7 @@ const steps = [
     id: 1,
     type: "intro",
     title: "Welcome to DayAhead!",
-    description: "Let's help you build a better night routine.",
+    description: "Let's help you build a better routine.",
   },
   {
     id: 2,
@@ -204,6 +204,7 @@ export default function Onboarding() {
 
         {current.type === "intro" && (
           <>
+            <Image style={{width: 100, height: 100, marginTop: -30}} source={require("../../assets/WavingSun.png")}/>
             <Text style={styles.description}>{current.description}</Text>
             <TouchableOpacity style={styles.button} onPress={nextStep}>
               <Text style={styles.buttonText}>Next</Text>

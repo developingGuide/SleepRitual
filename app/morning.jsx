@@ -157,6 +157,8 @@ export default function MorningScreen() {
 
       setAlertMessage("✨ Morning complete!\nLet's start the day! 🌞");
 
+      await AsyncStorage.setItem("just_finished_routine", "true");
+
       // ✅ set navigation callback after save
       setAlertAction(() => () => router.replace("/"));
 

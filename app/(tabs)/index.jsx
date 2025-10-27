@@ -13,6 +13,7 @@ import { OverlayContext } from "../_layout";
 import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
 import { scheduleDailyReminder } from "../../lib/Notifications";
+import PaywallModal from "../../components/PaywallModal";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -20,6 +21,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [bgColor] = useState(new Animated.Value(0));
   const [now, setNow] = useState(new Date());
+  const [showPaywall, setShowPaywall] = useState(false);
   const [currentLogId, setCurrentLogId] = useState()
   const router = useRouter();
   const listRef = useRef(null);
@@ -187,6 +189,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const checkRoutineFlag = async () => {
+      const justFinished = await AsyncStorage.getItem("just_finished_routine");
+      if (justFinished === "true") {
+        await AsyncStorage.removeItem("just_finished_routine");
+        handlePaywallCheck();
+      }
+    };
+    checkRoutineFlag();
+  }, []);
+
+
+  useEffect(() => {
     const checkOnboarding = async () => {
       if (!session?.user) return; // Wait for user session
 
@@ -210,6 +224,51 @@ export default function Home() {
 
     checkOnboarding();
   }, [session]);
+
+  const handlePaywallCheck = async () => {
+    // 1️⃣ Check if user is paid
+    const { data: state, error } = await supabase
+      .from("user_state")
+      .select("has_paid")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (error) {
+      console.log("Error checking payment:", error.message);
+      return;
+    }
+
+    // if user already paid, skip entirely
+    if (state?.has_paid) return;
+
+    // 2️⃣ Track morning routine count
+    const countStr = await AsyncStorage.getItem("morning_count");
+    const count = countStr ? parseInt(countStr) : 0;
+    const newCount = count + 1;
+    await AsyncStorage.setItem("morning_count", newCount.toString());
+
+    // 3️⃣ Show paywall only when condition met
+    if (newCount % 3 === 0) {
+      setShowPaywall(true);
+      setOverlay(
+        <PaywallModal
+          onSuccess={async () => {
+            await supabase
+              .from("user_state")
+              .update({ has_paid: true })
+              .eq("user_id", session.user.id);
+
+            setShowPaywall(false);
+            setOverlay(null); // close overlay after success
+          }}
+          onClose={() => {
+            setShowPaywall(false);
+            setOverlay(null);
+          }}
+        />
+      );
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
