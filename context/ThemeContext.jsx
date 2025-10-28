@@ -8,7 +8,7 @@ export function ThemeProvider({ children }) {
     if (hour >= 5 && hour < 10) return "#FFF7D1"; // Morning
     if (hour >= 10 && hour < 17) return "#FFFFFF"; // Afternoon
     if (hour >= 17 && hour < 20) return "#FFD6A5"; // Evening
-    return "#1A237E"; // Night
+    return "#6A8DD3"; // Night
   };
 
   const getTextColorByTime = () => {

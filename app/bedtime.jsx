@@ -236,7 +236,7 @@ export default function BedtimePlanner() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
         <Text style={{ color: "#fff", fontSize: 18 }}>Preparing your planner...</Text>
       </View>
     );
@@ -250,12 +250,12 @@ export default function BedtimePlanner() {
       <Animated.View 
         style={{
           flex: 1,
-          backgroundColor: "#1A237E",
+          backgroundColor: "#6A8DD3",
           opacity, // 👈 bound to animation
         }}
       >
 
-      <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+      <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#6A8DD3" }}>
         <TouchableOpacity
           onPress={() => router.replace('/')}
           style={{
@@ -289,12 +289,12 @@ export default function BedtimePlanner() {
               key={m}
               onPress={() => setMode(m)}
               style={{
-                backgroundColor: mode === m ? "#4CAF50" : "#1A237E",
+                backgroundColor: mode === m ? "#3b6fd5" : "rgba(255,255,255,0.08)",
                 paddingVertical: 8,
                 paddingHorizontal: 20,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: "#4CAF50",
+                borderColor: "#3b6fd5",
                 marginHorizontal: 5,
                 zIndex: 100,
               }}
@@ -367,7 +367,7 @@ export default function BedtimePlanner() {
                   value={item.text}
                   onChangeText={(text) => updateTodo(i, text)}
                   placeholder={`Task ${i + 1}`}
-                  placeholderTextColor="#888"
+                  placeholderTextColor="#ccc"
                   style={{
                     flex: 1,
                     paddingVertical: 10,
@@ -402,7 +402,7 @@ export default function BedtimePlanner() {
                     setTodoList(newTodos);
                   }}
                   placeholder="@09:00"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#ccc"
                   keyboardType="numeric"
                   style={{
                     width: 70,
@@ -423,7 +423,7 @@ export default function BedtimePlanner() {
                   }}
                   style={{ padding: 6 }}
                 >
-                  <Text style={{ color: "#ff6b6b", fontSize: 18 }}>✕</Text>
+                  <Text style={{ color: "#ad1313", fontSize: 18 }}>✕</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -432,7 +432,7 @@ export default function BedtimePlanner() {
             <TouchableOpacity
               onPress={handleAddAndFocus}
               style={{
-                backgroundColor: "#4CAF50",
+                backgroundColor: "#537dd1",
                 padding: 10,
                 borderRadius: 30,
                 alignItems: "center",
@@ -464,15 +464,15 @@ export default function BedtimePlanner() {
           style={{
             backgroundColor: "transparent",
             borderWidth: 1,
-            borderColor: "#ff6b6b",
+            borderColor: "#ad1313",
             padding: 10,
             borderRadius: 25,
             alignItems: "center",
             marginBottom: 10,
-            backgroundColor: "#1A237E",
+            backgroundColor: "rgba(255,255,255,0.08)",
           }}
         >
-          <Text style={{ color: "#ff6b6b", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
+          <Text style={{ color: "#ad1313", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
             Clear All
           </Text>
         </TouchableOpacity>
@@ -480,7 +480,7 @@ export default function BedtimePlanner() {
         <TouchableOpacity
           onPress={saveData}
           style={{
-            backgroundColor: "#3949AB",
+            backgroundColor: "#3b6fd5",
             padding: 15,
             borderRadius: 25,
             alignItems: "center",

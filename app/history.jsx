@@ -180,11 +180,11 @@ export default function History() {
                 })}
               </Text>
               {type === "gratitude" ? (
-                <View style={styles.tagsRow}>
+                <View style={styles.listContainerr}>
                   {entry.items.map((item, j) => (
-                    <View key={j} style={styles.tag}>
-                      <Text style={styles.tagText}>{item}</Text>
-                    </View>
+                    <Text key={j} style={styles.listItem}>
+                      • {item}
+                    </Text>
                   ))}
                 </View>
               ) : (
@@ -201,9 +201,9 @@ export default function History() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0E1913" },
+  container: { flex: 1, backgroundColor: "#6A8DD3" },
   backBtn: { padding: 16 },
-  backText: { color: "#8EFFC1", fontSize: 16, fontFamily: "Manrope-Bold" },
+  backText: { color: "#fff", fontSize: 16, fontFamily: "Manrope-Bold" },
   title: {
     fontSize: 22,
     color: "#fff",
@@ -219,23 +219,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   filterBtn: {
-    backgroundColor: "#1E3C2B",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 10,
   },
-  filterText: { color: "#8EFFC1", fontFamily: "Manrope-Regular" },
-  durationBtn: { backgroundColor: "#245C3C" },
+  filterText: { color: "#F9D976", fontFamily: "Manrope-Regular" },
+  durationBtn: { backgroundColor: "rgba(255, 255, 255, 0.1)" },
   card: {
-    backgroundColor: "#172720",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
-  dateText: { color: "#8EFFC1", fontFamily: "Manrope-Bold" },
+  dateText: { color: "#F9D976", fontFamily: "Manrope-Bold" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
   tag: {
-    backgroundColor: "#8EFFC1",
+    backgroundColor: "#F9D976",
     borderRadius: 10,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -244,5 +244,15 @@ const styles = StyleSheet.create({
   },
   tagText: { color: "#0E1913", fontFamily: "Manrope-Regular" },
   meditationText: { color: "#fff", marginTop: 4, fontFamily: "Manrope-Regular" },
-  empty: { color: "#777", textAlign: "center", marginTop: 40 },
+  empty: { color: "#fff", textAlign: "center", marginTop: 40 },
+  listContainerr: {
+    marginTop: 6,
+  },
+  listItem: {
+    color: "#fff",
+    fontSize: 14,
+    fontFamily: "Manrope-Regular",
+    lineHeight: 20,
+    marginBottom: 3,
+  },
 });

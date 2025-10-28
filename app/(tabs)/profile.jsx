@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart } from "react-native-gifted-charts";
 import { useFocusEffect, useRouter } from "expo-router";
 import CustomAlert from "../../components/CustomAlert";
+import { OverlayContext } from "../_layout";
 
 export default function Profile() {
   const { bgColor, textColor } = useTheme();
@@ -32,6 +33,8 @@ export default function Profile() {
   const [alertAction, setAlertAction] = useState("");
 
   const router = useRouter();
+
+  const { setOverlay } = useContext(OverlayContext);
 
   useFocusEffect(
     useCallback(() => {
@@ -217,7 +220,7 @@ export default function Profile() {
 
   if (loading)
     return (
-      <View style={[styles.center, { backgroundColor: "#1A237E" }]}>
+      <View style={[styles.center, { backgroundColor: "#6A8DD3" }]}>
         <ActivityIndicator size="large" color="#8effc1" />
       </View>
     );
@@ -233,11 +236,11 @@ export default function Profile() {
           gratitudeHistory.slice(0, limit).map((entry, index) => (
             <View key={index} style={styles.card}>
               <Text style={styles.cardDate}>{entry.date}</Text>
-              <View style={styles.tagsRow}>
+              <View style={styles.listContainerr}>
                 {entry.items.map((item, i) => (
-                  <View key={i} style={styles.tag}>
-                    <Text style={styles.tagText}>{item}</Text>
-                  </View>
+                  <Text key={i} style={styles.listItem}>
+                    • {item}
+                  </Text>
                 ))}
               </View>
             </View>
@@ -262,7 +265,7 @@ export default function Profile() {
 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: "#1A237E" }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#6A8DD3" }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 22, fontWeight: "600", marginTop: 15, color: "#fff", fontFamily: "Manrope-Bold", paddingLeft: 20 }}>
           Profile
@@ -272,7 +275,6 @@ export default function Profile() {
         <View style={styles.overviewBox}>
           <Text style={styles.overviewTitle}>This Week</Text>
           <Text style={styles.totalHours}>{totalHours.toFixed(1)} hrs</Text>
-          <Text style={styles.subtext}>Total Sleep</Text>
           <View style={styles.streakBubble}>
             <Text style={styles.streakNumber}>{streak} 🔥</Text>
             <Text style={styles.subtext}>Day Streak</Text>
@@ -288,8 +290,8 @@ export default function Profile() {
             barWidth={16}
             frontColor="#7DF9B8"
             barBorderRadius={6}
-            xAxisLabelTextStyle={{ color: "#ccc", fontSize: 11 }}
-            yAxisTextStyle={{ color: "#999", fontSize: 11 }}
+            xAxisLabelTextStyle={{ color: "#fff", fontSize: 11 }}
+            yAxisTextStyle={{ color: "#fff", fontSize: 11 }}
             height={200}
             noOfSections={4}
             maxValue={12}
@@ -394,20 +396,20 @@ const styles = StyleSheet.create({
   logoutButton: {
     alignSelf: "center",
     borderWidth: 1,
-    borderColor: "#FF5252",
+    borderColor: "#ad1313",
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 20,
   },
   logoutText: {
-    color: "#FF5252",
+    color: "#ad1313",
     fontWeight: "600",
     fontSize: 15,
     fontFamily: "Manrope-Bold"
   },
 
   overviewBox: {
-    backgroundColor: "#121212",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 24,
     margin: 16,
@@ -416,36 +418,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  overviewTitle: { color: "#8EFFC1", fontSize: 18, fontFamily: "Manrope-Bold" },
+  overviewTitle: { color: "#F9D976", fontSize: 18, fontFamily: "Manrope-Bold" },
   totalHours: { color: "#fff", fontSize: 46, marginBottom: 12, fontWeight: "700", fontFamily: "Manrope-Regular" },
-  subtext: { color: "#aaa", fontSize: 14, fontFamily: "Manrope-Regular" },
+  subtext: { color: "#fff", fontSize: 14, fontFamily: "Manrope-Regular" },
   streakBubble: {
     marginTop: 12,
-    backgroundColor: "#1e1e1e",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     paddingVertical: 8,
     paddingHorizontal: 18,
     borderRadius: 14,
   },
-  streakNumber: { color: "#8EFFC1", fontSize: 20, fontFamily: "Manrope-Bold", textAlign:"center" },
+  streakNumber: { color: "#fff", fontSize: 20, fontFamily: "Manrope-Bold", textAlign:"center" },
 
   chartBox: {
-    backgroundColor: "#121212",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
     marginHorizontal: 16,
     marginTop: 10,
     alignItems: "center",
   },
-  sectionTitle: { color: "#8EFFC1", fontSize: 18, marginBottom: 12, fontFamily: "Manrope-Bold" },
+  sectionTitle: { color: "#F9D976", fontSize: 18, marginBottom: 12, fontFamily: "Manrope-Bold" },
 
   historyBox: {
-    backgroundColor: "#0E1913",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     margin: 16,
     padding: 16,
   },
   showMoreText: {
-    color: "#8EFFC1",
+    color: "#fff",
     textAlign: "center",
     marginTop: 8,
     fontSize: 13,
@@ -461,22 +463,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 12,
   },
-  tabButtonActive: { backgroundColor: "#1E3C2B" },
-  tabText: { color: "#888", fontSize: 14, fontFamily: "Manrope-Bold" },
-  tabTextActive: { color: "#8EFFC1", fontWeight: "600", fontFamily: "Manrope-Bold" },
+  tabButtonActive: { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+  tabText: { color: "#fff", fontSize: 14, fontFamily: "Manrope-Bold" },
+  tabTextActive: { color: "#F9D976", fontWeight: "600", fontFamily: "Manrope-Bold" },
 
   historyContent: { marginTop: 4 },
   card: {
-    backgroundColor: "#172720",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
-  cardDate: { color: "#8EFFC1", fontSize: 13, marginBottom: 4, fontFamily: "Manrope-Bold" },
+  cardDate: { color: "#F9D976", fontSize: 13, marginBottom: 4, fontFamily: "Manrope-Bold" },
   cardText: { color: "#fff", fontSize: 14, lineHeight: 20, fontFamily: "Manrope-Regular" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap" },
   tag: {
-    backgroundColor: "#8EFFC1",
+    backgroundColor: "#F9D976",
     borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -485,9 +487,19 @@ const styles = StyleSheet.create({
   },
   tagText: { color: "#0E1913", fontSize: 13, fontWeight: "600", fontFamily: "Manrope-Regular" },
   emptyText: {
-    color: "#666",
+    color: "#fff",
     textAlign: "center",
     paddingVertical: 10,
     fontFamily: "Manrope-Regular"
+  },
+  listContainerr: {
+    marginTop: 6,
+  },
+  listItem: {
+    color: "#fff",
+    fontSize: 14,
+    fontFamily: "Manrope-Regular",
+    lineHeight: 20,
+    marginBottom: 3,
   },
 });

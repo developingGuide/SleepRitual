@@ -282,7 +282,7 @@ export default function Home() {
     if (hour >= 5 && hour < 10) return "#FFF7D1"; // Morning
     if (hour >= 10 && hour < 17) return "#FFFFFF"; // Afternoon
     if (hour >= 17 && hour < 20) return "#FFD6A5"; // Evening
-    return "#1A237E"; // Night
+    return "#6A8DD3"; // Night
   };
 
   const getTextColorByTime = () => {
@@ -449,7 +449,7 @@ export default function Home() {
   
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#1A237E" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
         <ActivityIndicator size="large" />
         <Text>Loading your bedtime data...</Text>
       </View>
@@ -457,7 +457,7 @@ export default function Home() {
   }
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: "#1A237E" }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: "#6A8DD3" }}>
       <Animated.View style={{ flex: 1, opacity }}>
       {data ? (
         <>
@@ -497,7 +497,7 @@ export default function Home() {
                       alignItems: "center",
                       marginBottom: 10,
                       paddingVertical: 6,
-                      backgroundColor: isNow ? "rgba(76, 175, 80, 0.15)" : "transparent",
+                      backgroundColor: isNow ? "rgba(153, 175, 76, 0.15)" : "transparent",
                       borderRadius: 6,
                     }}
                   >
@@ -508,7 +508,7 @@ export default function Home() {
                         height: 10,
                         borderRadius: 5,
                         marginRight: 8,
-                        backgroundColor: isNow ? "#4CAF50" : "transparent",
+                        backgroundColor: isNow ? "#F9D976" : "transparent",
                       }}
                     />
 
@@ -649,9 +649,9 @@ export default function Home() {
       {/* Bottom button */}
       <TouchableOpacity
         style={{
-          backgroundColor: "#3F51B5",
+          backgroundColor: "#3b6fd5",
           padding: 15,
-          borderRadius: 10,
+          borderRadius: 30,
           alignItems: "center",
           marginTop: 15,
         }}
