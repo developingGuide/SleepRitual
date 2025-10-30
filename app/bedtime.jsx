@@ -175,6 +175,26 @@ export default function BedtimePlanner() {
   const addTodo = () => setTodoList([...todoList, { text: "", done: false }]);
 
   const saveData = async () => {
+    // 🧩 Step 1: Validate inputs before saving
+    if (mode === "planner") {
+      const hasAtLeastOneTask = plan.some((p) => p.task.trim() !== "");
+      if (!hasAtLeastOneTask) {
+        setAlertMessage("⚠️ Please fill in at least one task before saving!");
+        setAlertVisible(true);
+        return;
+      }
+    } else if (mode === "todo") {
+      const allFilled = todoList.every(
+        (t) => t.text.trim() !== ""
+      );
+      if (!allFilled) {
+        setAlertMessage("⚠️ Please make sure every to-do has tasks!");
+        setAlertVisible(true);
+        return;
+      }
+    }
+
+    // 🕒 Step 2: Continue with normal save
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateKey = "night_data-" + tomorrow.toDateString();
@@ -206,10 +226,8 @@ export default function BedtimePlanner() {
     }
 
     setAlertMessage("✅ Saved successfully!");
-
     setAlertAction(() => () => {
       Keyboard.dismiss();
-
       setTimeout(() => {
         Animated.timing(opacity, {
           toValue: 0,
@@ -218,7 +236,6 @@ export default function BedtimePlanner() {
         }).start(() => router.push("/sleeping"));
       }, 100);
     });
-
     setAlertVisible(true);
   };
 

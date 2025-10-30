@@ -9,7 +9,8 @@ import {
   Vibration,
   PanResponder,
   Animated,
-  Platform
+  Platform,
+  Easing
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -46,6 +47,14 @@ export default function MorningScreen() {
   
   const opacity = useRef(new Animated.Value(1)).current;
   const modeOpacity = useRef(new Animated.Value(0)).current;
+
+  const gratitudePrompts = [
+    "I am grateful for...",
+    "Did anyone say thank you to you today?",
+  ];
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [promptIndex, setPromptIndex] = useState(0);
   
   useEffect(() => {
     Animated.timing(opacity, {
@@ -56,13 +65,39 @@ export default function MorningScreen() {
   }, []);
 
   useEffect(() => {
-    AsyncStorage.setItem("last_route", "/morning");
+    AsyncStorage.setItem("last_route", "/");
   }, []);
 
   // Meditation Wheel Logic
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
+
+  useEffect(() => {
+    const switchPrompt = () => {
+      // fade out first
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 600,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start(() => {
+        // after fade out completes, switch text
+        setPromptIndex((p) => (p + 1) % gratitudePrompts.length);
+
+        // then fade in new text
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+      });
+    };
+
+    const id = setInterval(switchPrompt, 10000); // every 10 seconds
+    return () => clearInterval(id);
+  }, [fadeAnim]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -228,14 +263,23 @@ export default function MorningScreen() {
   };
 
   const finishGratitude = async () => {
-    const filtered = gratitudeList.map((g) => g.trim()).filter(Boolean);
-    if (filtered.length < 1) {
-      setAlertMessage("Hold up!", "Write at least one thing you’re grateful for 🙏");
+    // 🧩 Validate gratitude entries
+    const trimmedList = gratitudeList.map((g) => g.trim());
+    const filled = trimmedList.filter(Boolean);
+
+    if (filled.length < 5) {
+      setAlertMessage("⚠️ Please write at least five thing you’re grateful for 🙏");
       setAlertVisible(true);
       return;
     }
 
-    await finishMorningRoutine({ gratitude_text: filtered.join(", ") }); // ✅ wait for DB save
+    try {
+      await finishMorningRoutine({ gratitude_text: filled.join(", ") });
+    } catch (err) {
+      console.error(err);
+      setAlertMessage("❌ Something went wrong saving your gratitude entry.");
+      setAlertVisible(true);
+    }
   };
 
   // ---------------- UI -----------------
@@ -417,16 +461,18 @@ export default function MorningScreen() {
 
         {/* Centered content */}
         <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text
+          <Animated.Text
             style={{
               fontSize: 20,
               fontWeight: "700",
               textAlign: "center",
               marginBottom: 20,
+              opacity: fadeAnim, // animated opacity object
             }}
-            >
-            I am grateful for...
-          </Text>
+          >
+            {gratitudePrompts[promptIndex]}
+          </Animated.Text>
+
 
           {gratitudeList.map((g, i) => (
             <TextInput

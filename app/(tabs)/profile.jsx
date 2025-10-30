@@ -14,6 +14,8 @@ import { BarChart } from "react-native-gifted-charts";
 import { useFocusEffect, useRouter } from "expo-router";
 import CustomAlert from "../../components/CustomAlert";
 import { OverlayContext } from "../_layout";
+import { Ionicons } from "@expo/vector-icons";
+import PaywallModal from "../../components/PaywallModal";
 
 export default function Profile() {
   const { bgColor, textColor } = useTheme();
@@ -271,6 +273,31 @@ export default function Profile() {
           Profile
         </Text>
 
+        {!hasPaid && (
+          <TouchableOpacity
+            style={styles.upgradeButton}
+            onPress={() => {
+              setOverlay(
+                <PaywallModal
+                  onSuccess={async () => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    await supabase
+                      .from("user_state")
+                      .update({ has_paid: true })
+                      .eq("user_id", user.id);
+
+                    setHasPaid(true);
+                    setOverlay(null);
+                  }}
+                  onClose={() => setOverlay(null)}
+                />
+              );
+            }}
+          >
+            <Ionicons name="star-outline" size={26} color="#F9D976" />
+          </TouchableOpacity>
+        )}
+
         {/* --- WEEK OVERVIEW --- */}
         <View style={styles.overviewBox}>
           <Text style={styles.overviewTitle}>This Week</Text>
@@ -392,6 +419,14 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  upgradeButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    padding: 6,
+    zIndex: 10,
+  },
 
   logoutButton: {
     alignSelf: "center",
