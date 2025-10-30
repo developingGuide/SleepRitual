@@ -38,6 +38,8 @@ export default function Sleeping() {
   const handleWakeUp = async () => {
     const sleepEnd = new Date().toISOString();
     await AsyncStorage.setItem("sleep_end", sleepEnd);
+
+    await AsyncStorage.removeItem("last_route");
     
     // 👇 Start overlay fade animation
     setShowMorningOverlay(true);

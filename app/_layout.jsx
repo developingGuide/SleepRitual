@@ -26,6 +26,18 @@ function InitialRoute() {
   useEffect(() => {
     (async () => {
       const savedRoute = await AsyncStorage.getItem("last_route");
+
+      // Optional: sanity check so we don’t get stuck on sleeping forever
+      if (savedRoute === "/sleeping") {
+        const sleepEnd = await AsyncStorage.getItem("sleep_end");
+        if (sleepEnd) {
+          // they've already woken up
+          await AsyncStorage.removeItem("last_route");
+          setInitialPath("/");
+          return;
+        }
+      }
+
       setInitialPath(savedRoute || "/");
     })();
   }, []);

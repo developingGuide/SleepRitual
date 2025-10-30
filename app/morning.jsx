@@ -156,9 +156,7 @@ export default function MorningScreen() {
 
       const { mode, plan, todoList } = pendingPlan || {};
       const sleepStart = await AsyncStorage.getItem("sleep_start");
-      const sleepEnd = new Date().toISOString();
-
-      await AsyncStorage.setItem("sleep_end", sleepEnd);
+      const sleepEnd = await AsyncStorage.getItem("sleep_end");
 
       if (!sleepStart) {
         setAlertMessage("⚠️ Missing data\nCould not find your sleep session info.");
@@ -197,7 +195,7 @@ export default function MorningScreen() {
         return;
       }
 
-      await AsyncStorage.multiRemove(["pending_plan", "sleep_start", "sleepEnd"]);
+      await AsyncStorage.multiRemove(["pending_plan", "sleep_start", "sleep_end"]);
 
       setAlertMessage("✨ Morning complete!\nLet's start the day! 🌞");
 
