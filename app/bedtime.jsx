@@ -62,6 +62,21 @@ export default function BedtimePlanner() {
     AsyncStorage.setItem("last_route", "/bedtime");
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const pending = await AsyncStorage.getItem("pending_plan");
+      if (pending) {
+        const { savedAt } = JSON.parse(pending);
+        const savedDate = new Date(savedAt);
+        const now = new Date();
+        const diffHours = (now - savedDate) / (1000 * 60 * 60);
+        if (diffHours > 20) { // older than ~1 day
+          await AsyncStorage.removeItem("pending_plan");
+        }
+      }
+    })();
+  }, []);
+
   const fetchPrefilledPlan = async () => {
     setLoading(true);
     try {
@@ -194,36 +209,17 @@ export default function BedtimePlanner() {
       }
     }
 
-    // 🕒 Step 2: Continue with normal save
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateKey = "night_data-" + tomorrow.toDateString();
-
-    const dataToSave =
-      mode === "planner"
-        ? { mode: "planner", plan }
-        : { mode: "todo", todoList };
-
-    await AsyncStorage.setItem(dateKey, JSON.stringify(dataToSave));
-
     const sleepStart = new Date().toISOString();
     await AsyncStorage.setItem("sleep_start", sleepStart);
 
-    const { error } = await supabase.from("sleep_logs").insert([
-      {
-        user_id: session.user.id,
-        sleep_start: sleepStart,
-        planned_plan: mode === "planner" ? plan : null,
-        todo_list: mode === "todo" ? todoList : null,
-      },
-    ]);
+    const bedtimeData = {
+      mode,
+      plan,
+      todoList,
+      savedAt: sleepStart,
+    };
 
-    if (error) {
-      console.error(error);
-      setAlertMessage("❌ Failed to save bedtime data.");
-      setAlertVisible(true);
-      return;
-    }
+    await AsyncStorage.setItem("pending_plan", JSON.stringify(bedtimeData));
 
     setAlertMessage("✅ Saved successfully!");
     setAlertAction(() => () => {

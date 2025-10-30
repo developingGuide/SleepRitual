@@ -151,8 +151,13 @@ export default function MorningScreen() {
   const finishMorningRoutine = async (extraData = {}) => {
     try {
       const userId = session.user.id;
+      const pendingPlanJSON = await AsyncStorage.getItem("pending_plan");
+      const pendingPlan = pendingPlanJSON ? JSON.parse(pendingPlanJSON) : null;
+
+      const { mode, plan, todoList } = pendingPlan || {};
       const sleepStart = await AsyncStorage.getItem("sleep_start");
       const sleepEnd = new Date().toISOString();
+
       await AsyncStorage.setItem("sleep_end", sleepEnd);
 
       if (!sleepStart) {
@@ -172,8 +177,12 @@ export default function MorningScreen() {
 
       const { error } = await supabase
         .from("sleep_logs")
-        .update({
+        .insert({
+          user_id: session.user.id,
+          sleep_start: sleepStart,
           sleep_end: sleepEnd,
+          planned_plan: mode === "planner" ? plan : null,
+          todo_list: mode === "todo" ? todoList : null,
           duration_hours: durationHours,
           gratitude_text: extraData.gratitude_text || null,
           meditation_minutes: extraData.meditation_minutes || null,
@@ -188,7 +197,7 @@ export default function MorningScreen() {
         return;
       }
 
-      await AsyncStorage.removeItem("sleep_end");
+      await AsyncStorage.multiRemove(["pending_plan", "sleep_start", "sleepEnd"]);
 
       setAlertMessage("✨ Morning complete!\nLet's start the day! 🌞");
 
