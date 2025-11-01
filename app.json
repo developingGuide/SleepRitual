@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "notification": {
-      "icon": "./assets/adaptive-icon.png",
+      "icon": "./assets/Logo.png",
       "backgroundColor": "#002a5b",
       "androidMode": "default",
       "androidCollapsedTitle": "Your App"

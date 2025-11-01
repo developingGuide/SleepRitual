@@ -19,7 +19,7 @@ const steps = [
   {
     id: 1,
     type: "intro",
-    title: "Welcome to DayAhead!",
+    title: "Welcome to DayAhead (Beta)!",
     description: "Let's help you build a better routine.",
   },
   {
@@ -84,7 +84,7 @@ const steps = [
   {
     type: "end",
     title: "All set!",
-    description: "Let's start building your evenings the right way!",
+    description: "Let's start building your evenings the right way! (Do expect bugs as the app is in beta!)",
   },
 ];
 

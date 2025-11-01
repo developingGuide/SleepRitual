@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Keyboard } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Keyboard, Image } from "react-native"
 import { supabase } from "../../lib/supabase"
 import { router } from "expo-router"
 
@@ -26,7 +26,7 @@ export default function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#888"
+          placeholderTextColor="#ccc"
           autoCapitalize="none"
           onChangeText={setEmail}
           value={email}
@@ -34,7 +34,7 @@ export default function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#888"
+          placeholderTextColor="#ccc"
           secureTextEntry
           onChangeText={setPassword}
           value={password}
@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#6A8DD3" },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#fff" },
   input: { borderWidth: 0.5, borderColor: "#ccc", padding: 12, borderRadius: 8, marginBottom: 12, color: "#fff" },
-  button: { backgroundColor: "#6C63FF", padding: 15, borderRadius: 8, alignItems: "center" },
+  button: { backgroundColor: "#3b6fd5", padding: 15, borderRadius: 8, alignItems: "center" },
   buttonText: { color: "#fff", fontWeight: "bold" },
   error: { color: "red", marginBottom: 10 },
-  link: { marginTop: 12, textAlign: "center", color: "#6C63FF" },
+  link: { marginTop: 12, textAlign: "center", color: "#3b6fd5" },
 })

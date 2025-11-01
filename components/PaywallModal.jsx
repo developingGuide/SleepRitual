@@ -78,9 +78,8 @@ export default function PaywallModal({ onClose, onSuccess }) {
   const proFeatures = [
     "Includes all Free features",
     "See past journals",
-    "AI coach support",
-    "Themes & custom sounds",
-    "Home widget for today’s plan",
+    "Themes & custom sounds (Coming Soon)",
+    "Home widget for today’s plan (Coming Soon)",
     "Auto-fill from yesterday’s tasks",
     "Full timeline view + export",
   ];

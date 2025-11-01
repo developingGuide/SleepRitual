@@ -16,6 +16,7 @@ import CustomAlert from "../../components/CustomAlert";
 import { OverlayContext } from "../_layout";
 import { Ionicons } from "@expo/vector-icons";
 import PaywallModal from "../../components/PaywallModal";
+import FeedbackModal from "../../components/FeedbackModal";
 
 export default function Profile() {
   const { bgColor, textColor } = useTheme();
@@ -29,6 +30,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -391,6 +393,13 @@ export default function Profile() {
         </TouchableOpacity>
 
         <View style={styles.logoutButtonView}>
+          <TouchableOpacity
+            style={styles.feedbackButton}
+            onPress={() => setShowFeedback(true)}
+          >
+            <Text style={styles.feedbackText}>Feedback</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Log out</Text>
           </TouchableOpacity>
@@ -412,6 +421,10 @@ export default function Profile() {
           setAlertVisible(false);
         }}
       />
+
+      {showFeedback && (
+        <FeedbackModal onClose={() => setShowFeedback(false)} />
+      )}
     </SafeAreaView>
   );
 }
@@ -536,5 +549,25 @@ const styles = StyleSheet.create({
     fontFamily: "Manrope-Regular",
     lineHeight: 20,
     marginBottom: 3,
+  },
+
+  feedbackButton: {
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  feedbackText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+    fontFamily: "Manrope-Bold"
+  },
+  logoutButtonView: {
+    marginTop: 20,
+    marginBottom: 30,
   },
 });
