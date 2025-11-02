@@ -229,7 +229,7 @@ export default function BedtimePlanner() {
           toValue: 0,
           duration: 500,
           useNativeDriver: true,
-        }).start(() => router.push("/sleeping"));
+        }).start(() => router.replace("/sleeping"));
       }, 100);
     });
     setAlertVisible(true);

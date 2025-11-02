@@ -184,8 +184,13 @@ export default function Home() {
     scheduleDailyReminder(21, 0); // schedule next reminder when user sleeps
   }, []);
 
+  // example inside root layout or main App component
   useEffect(() => {
-    AsyncStorage.setItem("last_route", "/");
+    const checkRoute = async () => {
+      const lastRoute = await AsyncStorage.getItem("last_Route");
+      if (lastRoute === "/sleeping") router.replace(lastRoute);
+    };
+    checkRoute();
   }, []);
 
   useEffect(() => {
