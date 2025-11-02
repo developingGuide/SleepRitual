@@ -222,8 +222,6 @@ export default function Home() {
 
       if (!data || !data.has_onboarded) {
         router.replace("/onboarding/onboarding");
-      } else {
-        router.replace("/"); // proceed normally
       }
     };
 
