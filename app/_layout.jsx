@@ -22,15 +22,36 @@ Notifications.setNotificationHandler({
 function InitialRoute() {
   const { session, loading } = useContext(AuthContext);
   const [initialPath, setInitialPath] = useState(null);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const savedRoute = await AsyncStorage.getItem("last_route");
-      setInitialPath(savedRoute || "/");
+      try {
+        const savedRoute = await AsyncStorage.getItem("last_route");
+        const sleepStart = await AsyncStorage.getItem("sleep_start");
+        const sleepEnd = await AsyncStorage.getItem("sleep_end");
+
+        // If we were sleeping and haven't logged a wake-up time yet
+        if (savedRoute === "/sleeping" && sleepStart && !sleepEnd) {
+          setInitialPath("/sleeping");
+        } else {
+          // Clear sleep tracking if we've completed the cycle or weren't sleeping
+          if (sleepEnd) {
+            await AsyncStorage.removeItem("sleep_start");
+            await AsyncStorage.removeItem("sleep_end");
+          }
+          setInitialPath(savedRoute || "/");
+        }
+      } catch (error) {
+        console.error("Error checking sleep state:", error);
+        setInitialPath("/");
+      } finally {
+        setIsChecking(false);
+      }
     })();
   }, []);
 
-  if (loading || initialPath === null) {
+  if (loading || isChecking || initialPath === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
         <ActivityIndicator size="large" color="#6C63FF" />

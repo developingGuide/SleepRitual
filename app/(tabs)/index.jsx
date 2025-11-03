@@ -187,7 +187,7 @@ export default function Home() {
   // example inside root layout or main App component
   useEffect(() => {
     const checkRoute = async () => {
-      const lastRoute = await AsyncStorage.getItem("last_Route");
+      const lastRoute = await AsyncStorage.getItem("last_route");
       if (lastRoute === "/sleeping") router.replace(lastRoute);
     };
     checkRoute();
