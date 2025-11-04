@@ -86,11 +86,10 @@ export default function Layout() {
     //    Purchases.configure({apiKey: <revenuecat_project_apple_api_key>});
     // } else if
     if (Platform.OS === 'android') {
-      Purchases.configure({apiKey: `${process.env.REVENUECAT_PROJECT_GOOGLE_API_KEY}`});
+      Purchases.configure({apiKey: "goog_fdJYlchfRoXYNJjsnXPNpwrPcGB"});
     }
 
-    getCustomerInfo()
-
+    // getCustomerInfo()
   }, []);
 
   useEffect(() => {

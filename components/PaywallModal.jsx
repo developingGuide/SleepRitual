@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Easing 
 import { useStripe } from "@stripe/stripe-react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 import CustomAlert from "./CustomAlert";
+import Purchases from "react-native-purchases";
+import { supabase } from "../lib/supabase";
+
 
 export default function PaywallModal({ onClose, onSuccess }) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -11,9 +14,13 @@ export default function PaywallModal({ onClose, onSuccess }) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
+  
+  const [offerings, setOfferings] = useState(null);
+  
   const translateY = useRef(new Animated.Value(300)).current;
-
+  
+  // Inside component
+  const session = supabase.auth.getSession();
 
   React.useEffect(() => {
     Animated.timing(translateY, {
@@ -22,6 +29,10 @@ export default function PaywallModal({ onClose, onSuccess }) {
       easing: Easing.out(Easing.exp),
       useNativeDriver: true,
     }).start();
+  }, []);
+
+  React.useEffect(() => {
+    getOfferings();
   }, []);
 
   const openPaymentSheet = async () => {
@@ -93,6 +104,53 @@ export default function PaywallModal({ onClose, onSuccess }) {
     "Basic weekly graph"
   ];
 
+  const getOfferings = async () => {
+    try {
+      const result = await Purchases.getOfferings();
+      if (result.current && result.current.availablePackages.length > 0) {
+        setOfferings(result);
+      }
+    } catch (err) {
+      console.log("Error fetching offerings:", err);
+    }
+  };
+
+  const handleSubscribe = async (pkg) => {
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      if(typeof customerInfo.entitlements.active["Day Ahead Pro"] !== "undefined") {
+        console.log("Customer Info", JSON.stringify(customerInfo, null, 2))
+
+        // 1. Show confetti + Alert
+        setShowConfetti(true);
+        setAlertMessage("Payment successful! 🎉 Welcome to DayAhead Pro.");
+        setAlertVisible(true);
+
+        // 2. Save to DB (Supabase)
+        // await supabase.from("user_state").upsert(
+        //   {
+        //     user_id: session.user.id,
+        //     has_paid: true,
+        //     has_onboarded: true,
+        //   },
+        //   { onConflict: ["user_id"] }
+        // );
+
+        // 3. Optional: callback to update local state
+        onSuccess?.();
+
+        // 4. Close after a delay so user can see animation
+        setTimeout(() => {
+          setShowConfetti(false);
+          setAlertVisible(false);
+          onClose?.();
+        }, 3000);
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return (
     <Animated.View style={[styles.fullScreen, { transform: [{ translateY }] }]}>
       <View style={styles.header}>
@@ -128,15 +186,18 @@ export default function PaywallModal({ onClose, onSuccess }) {
       </ScrollView>
 
       <View style={styles.bottomActions}>
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.6 }]}
-          onPress={openPaymentSheet}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Loading..." : "Upgrade to Pro"}
-          </Text>
-        </TouchableOpacity>
+        {offerings?.current?.availablePackages?.map((pkg) => (
+          <TouchableOpacity
+            key={pkg.identifier}
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={() => handleSubscribe(pkg)}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Loading..." : "Upgrade to Pro"}
+            </Text>
+          </TouchableOpacity>
+        ))}
 
         <TouchableOpacity onPress={onClose} style={{ marginTop: 15 }}>
           <Text style={styles.laterText}>Maybe later</Text>
