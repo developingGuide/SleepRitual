@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext, createContext } from "react";
 import { Stack, Redirect } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { StatusBar } from "react-native";
 import * as Font from "expo-font";
 import * as Notifications from "expo-notifications";
@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
 import AuthProvider, { AuthContext } from "../context/AuthContext";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { usePathname } from "expo-router";
 
 Notifications.setNotificationHandler({
@@ -72,6 +73,25 @@ export const OverlayContext = createContext();
 export default function Layout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [overlay, setOverlay] = useState(null);
+
+  const getCustomerInfo = async () => {
+    const customerInfo = await Purchases.getCustomerInfo();
+    console.log(customerInfo)
+  }
+
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    // if (Platform.OS === 'ios') {
+    //    Purchases.configure({apiKey: <revenuecat_project_apple_api_key>});
+    // } else if
+    if (Platform.OS === 'android') {
+      Purchases.configure({apiKey: `${process.env.REVENUECAT_PROJECT_GOOGLE_API_KEY}`});
+    }
+
+    getCustomerInfo()
+
+  }, []);
 
   useEffect(() => {
     const loadFonts = async () => {
