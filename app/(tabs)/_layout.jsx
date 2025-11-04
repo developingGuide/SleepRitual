@@ -16,8 +16,8 @@ function TabLayout() {
         tabBarInactiveTintColor: "#fff",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#6A8DD3",
-          borderTopColor: "#6A8DD3",
+          backgroundColor: "#141338",
+          borderTopColor: "#141338",
           paddingTop: 6,
           height: 60,
         },
@@ -29,7 +29,7 @@ function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
+            <Ionicons name="home-sharp" color={color} size={size} />
           ),
         }}
       />
@@ -39,7 +39,7 @@ function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
+            <Ionicons name="person-sharp" color={color} size={size} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function RootLayout() {
 function ThemedApp() {
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#6A8DD3" }}>
+    <View style={{ flex: 1, backgroundColor: "#141338" }}>
       <SafeAreaView style={{ flex: 1 }}>
         <TabLayout />
       </SafeAreaView>

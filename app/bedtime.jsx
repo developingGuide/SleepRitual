@@ -249,7 +249,7 @@ export default function BedtimePlanner() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
         <Text style={{ color: "#fff", fontSize: 18 }}>Preparing your planner...</Text>
       </View>
     );
@@ -263,12 +263,12 @@ export default function BedtimePlanner() {
       <Animated.View 
         style={{
           flex: 1,
-          backgroundColor: "#6A8DD3",
+          backgroundColor: "#141338",
           opacity, // 👈 bound to animation
         }}
       >
 
-      <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#6A8DD3" }}>
+      <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#141338" }}>
         <TouchableOpacity
           onPress={() => router.replace('/')}
           style={{
@@ -302,12 +302,10 @@ export default function BedtimePlanner() {
               key={m}
               onPress={() => setMode(m)}
               style={{
-                backgroundColor: mode === m ? "#3b6fd5" : "rgba(255,255,255,0.08)",
+                backgroundColor: mode === m ? "#252363" : "rgba(255,255,255,0.08)",
                 paddingVertical: 8,
                 paddingHorizontal: 20,
                 borderRadius: 20,
-                borderWidth: 1,
-                borderColor: "#3b6fd5",
                 marginHorizontal: 5,
                 zIndex: 100,
               }}
@@ -445,7 +443,7 @@ export default function BedtimePlanner() {
             <TouchableOpacity
               onPress={handleAddAndFocus}
               style={{
-                backgroundColor: "#537dd1",
+                backgroundColor: "#252363",
                 padding: 10,
                 borderRadius: 30,
                 alignItems: "center",
@@ -477,15 +475,14 @@ export default function BedtimePlanner() {
           style={{
             backgroundColor: "transparent",
             borderWidth: 1,
-            borderColor: "#ad1313",
-            padding: 10,
+            padding: 15,
             borderRadius: 25,
             alignItems: "center",
             marginBottom: 10,
-            backgroundColor: "rgba(255,255,255,0.08)",
+            backgroundColor: "#ff000062",
           }}
         >
-          <Text style={{ color: "#ad1313", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600", fontFamily: "Manrope-Bold" }}>
             Clear All
           </Text>
         </TouchableOpacity>
@@ -493,7 +490,7 @@ export default function BedtimePlanner() {
         <TouchableOpacity
           onPress={saveData}
           style={{
-            backgroundColor: "#3b6fd5",
+            backgroundColor: "#252363",
             padding: 15,
             borderRadius: 25,
             alignItems: "center",

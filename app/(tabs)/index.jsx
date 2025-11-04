@@ -285,7 +285,7 @@ export default function Home() {
     if (hour >= 5 && hour < 10) return "#FFF7D1"; // Morning
     if (hour >= 10 && hour < 17) return "#FFFFFF"; // Afternoon
     if (hour >= 17 && hour < 20) return "#FFD6A5"; // Evening
-    return "#6A8DD3"; // Night
+    return "#141338"; // Night
   };
 
   const getTextColorByTime = () => {
@@ -452,15 +452,15 @@ export default function Home() {
   
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
         <ActivityIndicator size="large" />
-        <Text>Loading your bedtime data...</Text>
+        <Text style={{color: "#fff"}}>Loading your bedtime data...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: "#6A8DD3" }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: "#141338" }}>
       <Animated.View style={{ flex: 1, opacity }}>
       {data ? (
         <>
@@ -652,7 +652,7 @@ export default function Home() {
       {/* Bottom button */}
       <TouchableOpacity
         style={{
-          backgroundColor: "#3b6fd5",
+          backgroundColor: "#252363",
           padding: 15,
           borderRadius: 30,
           alignItems: "center",

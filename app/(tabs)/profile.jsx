@@ -224,7 +224,7 @@ export default function Profile() {
 
   if (loading)
     return (
-      <View style={[styles.center, { backgroundColor: "#6A8DD3" }]}>
+      <View style={[styles.center, { backgroundColor: "#141338" }]}>
         <ActivityIndicator size="large" color="#8effc1" />
       </View>
     );
@@ -269,7 +269,7 @@ export default function Profile() {
 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: "#6A8DD3" }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#141338" }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 22, fontWeight: "600", marginTop: 15, color: "#fff", fontFamily: "Manrope-Bold", paddingLeft: 20 }}>
           Profile
@@ -444,13 +444,13 @@ const styles = StyleSheet.create({
   logoutButton: {
     alignSelf: "center",
     borderWidth: 1,
-    borderColor: "#ad1313",
+    backgroundColor: "#ad1313",
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 20,
   },
   logoutText: {
-    color: "#ad1313",
+    color: "#fff",
     fontWeight: "600",
     fontSize: 15,
     fontFamily: "Manrope-Bold"
@@ -553,12 +553,11 @@ const styles = StyleSheet.create({
 
   feedbackButton: {
     alignSelf: "center",
-    borderWidth: 1,
-    borderColor: "#fff",
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     borderRadius: 20,
     marginBottom: 10,
+    backgroundColor: "#252363"
   },
   feedbackText: {
     color: "#fff",

@@ -53,7 +53,7 @@ function InitialRoute() {
 
   if (loading || isChecking || initialPath === null) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
         <ActivityIndicator size="large" color="#6C63FF" />
       </View>
     );
@@ -86,7 +86,7 @@ export default function Layout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#6A8DD3" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
         <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
@@ -94,7 +94,7 @@ export default function Layout() {
 
   return (
     <OverlayContext.Provider value={{ overlay, setOverlay }}>
-      <View style={{ flex: 1, backgroundColor: "#6A8DD3" }}>
+      <View style={{ flex: 1, backgroundColor: "#141338" }}>
         <StatusBar style="auto" />
         <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
           <AuthProvider>
@@ -103,7 +103,7 @@ export default function Layout() {
                 headerShown: false,
                 animation: "fade",
                 presentation: "transparentModal",
-                contentStyle: { backgroundColor: "#6A8DD3" },
+                contentStyle: { backgroundColor: "#141338" },
               }}
             />
             <InitialRoute />

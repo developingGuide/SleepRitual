@@ -201,7 +201,7 @@ export default function History() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#6A8DD3" },
+  container: { flex: 1, backgroundColor: "#141338" },
   backBtn: { padding: 16 },
   backText: { color: "#fff", fontSize: 16, fontFamily: "Manrope-Bold" },
   title: {

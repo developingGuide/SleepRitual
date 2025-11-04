@@ -587,7 +587,7 @@ export default function MorningScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 30, color: "white" }}>
-          🧘 Set your meditation time
+          Set your meditation time
         </Text>
 
         <View
