@@ -15,6 +15,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { scheduleDailyReminder } from "../../lib/Notifications";
 import PaywallModal from "../../components/PaywallModal";
 import { WebView } from "react-native-webview";
+import ConfettiCannon from "react-native-confetti-cannon";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -440,57 +441,55 @@ export default function Home() {
 
 
   const triggerCelebration = (taskText) => {
-    // 🎉 Confetti + Video popup overlay
     setOverlay(
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.8)",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 999,
-        }}
-      >
-        {/* Confetti */}
+      <ConfettiCannon count={200} origin={{ x: 200, y: 0 }} fallSpeed={2000}/>
+    )
+
+    setTimeout(() => {
+      setOverlay(
         <View
           style={{
             position: "absolute",
-            width: "100%",
-            height: "100%",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.8)",
             justifyContent: "center",
             alignItems: "center",
+            zIndex: 999,
           }}
         >
-          {/* You can replace with a real confetti package later */}
-          <Text style={{ color: "#fff", fontSize: 28 }}>🎉🎉🎉</Text>
+          {/* Video reward */}
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+            <WebView
+              source={{
+                uri: "https://youtu.be/xvFZjo5PgG0?si=iCuvXtLVOMEy-Sl8",
+              }}
+              allowsFullscreenVideo={true}
+              mediaPlaybackRequiresUserAction={false}
+              style={{ flex: 1 }}
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setOverlay(null)}
+            style={{
+              // marginBottom ,
+              position: "absolute",
+              bottom: 40, // distance from bottom
+              right: 20,  // distance from right edge
+              paddingVertical: 20,
+              paddingHorizontal: 25,
+              backgroundColor: "#ad1313",
+              borderRadius: 40,
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 16 }}>Close</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Video reward */}
-        <View style={{ width: "90%", height: 250, borderRadius: 15, overflow: "hidden" }}>
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=enb06CATi0TWu5aR&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => setOverlay(null)}
-          style={{
-            marginTop: 25,
-            paddingVertical: 10,
-            paddingHorizontal: 25,
-            backgroundColor: "#4CAF50",
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 16 }}>Close</Text>
-        </TouchableOpacity>
-      </View>
-    );
-
-    // Auto close after video ends (e.g., 30s)
-    setTimeout(() => setOverlay(null), 30000);
+      );
+    }, 1000);
   };
 
   const { setOverlay } = useContext(OverlayContext);
