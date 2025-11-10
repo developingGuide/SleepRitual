@@ -14,6 +14,7 @@ import { supabase } from "../../lib/supabase";
 import { AuthContext } from "../../context/AuthContext";
 import { scheduleDailyReminder } from "../../lib/Notifications";
 import PaywallModal from "../../components/PaywallModal";
+import { WebView } from "react-native-webview";
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -437,6 +438,61 @@ export default function Home() {
     });
   };
 
+
+  const triggerCelebration = (taskText) => {
+    // 🎉 Confetti + Video popup overlay
+    setOverlay(
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.8)",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 999,
+        }}
+      >
+        {/* Confetti */}
+        <View
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* You can replace with a real confetti package later */}
+          <Text style={{ color: "#fff", fontSize: 28 }}>🎉🎉🎉</Text>
+        </View>
+
+        {/* Video reward */}
+        <View style={{ width: "90%", height: 250, borderRadius: 15, overflow: "hidden" }}>
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=enb06CATi0TWu5aR&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => setOverlay(null)}
+          style={{
+            marginTop: 25,
+            paddingVertical: 10,
+            paddingHorizontal: 25,
+            backgroundColor: "#4CAF50",
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16 }}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    );
+
+    // Auto close after video ends (e.g., 30s)
+    setTimeout(() => setOverlay(null), 30000);
+  };
+
   const { setOverlay } = useContext(OverlayContext);
 
   
@@ -570,7 +626,8 @@ export default function Home() {
 
                         if (!t.done) {
                           // means the user just *completed* it
-                          triggerBreathe(t.text);
+                          // triggerBreathe(t.text);
+                          triggerCelebration(t.text);
                         }
                       }}
                       activeOpacity={0.7}
