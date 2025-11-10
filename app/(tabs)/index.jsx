@@ -132,9 +132,6 @@ export default function Home() {
       let isActive = true;
 
       const init = async () => {
-        setLoading(true);
-        await loadData();
-        setLoading(false);
         updateBackground();
 
         Animated.timing(opacity, {
@@ -151,6 +148,10 @@ export default function Home() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    if (session?.user) loadData();
+  }, [session]);
 
   useEffect(() => {
     if (!data || data.mode !== "planner" || !data.plan) return;

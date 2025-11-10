@@ -108,6 +108,12 @@ export default function Onboarding() {
     }).start();
   }, [stepIndex]);
 
+  useEffect(() => {
+    if (!session) {
+      router.replace("/auth"); // or your actual login/signup route
+    }
+  }, [session]);
+
   const saveAnswer = async (key, answer) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
