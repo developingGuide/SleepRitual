@@ -380,10 +380,9 @@ export default function Home() {
   };
 
 
-  const triggerCelebration = (taskText) => {
-    // setOverlay(
-    //   <ConfettiCannon count={200} origin={{ x: 200, y: 0 }} fallSpeed={2000}/>
-    // )
+  const triggerCelebration = async (taskText) => {
+    const settings = await fetchCelebrationSettings();
+    if (!settings) return;
 
     setTimeout(() => {
       setOverlay(
@@ -400,25 +399,36 @@ export default function Home() {
             zIndex: 999,
           }}
         >
-          {/* Video reward */}
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-            <WebView
-              source={{
-                uri: "https://youtu.be/dQw4w9WgXcQ?si=Toa4GJm-i7_svz8X",
-              }}
-              allowsFullscreenVideo={true}
-              mediaPlaybackRequiresUserAction={false}
-              style={{ flex: 1 }}
-            />
-          </View>
+          {settings.celebrationType === "youtube" && settings.youtube_link ? (
+            <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+              <WebView
+                source={{
+                  uri: settings.youtube_link,
+                }}
+                allowsFullscreenVideo={true}
+                mediaPlaybackRequiresUserAction={false}
+                style={{ flex: 1 }}
+              />
+            </View>
+          ) : settings.celebrationType === "video" && settings.video_url ? (
+            <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+              <WebView
+                source={{ uri: settings.video_url }}
+                allowsFullscreenVideo
+                mediaPlaybackRequiresUserAction={false}
+                style={{ flex: 1}}
+              />
+            </View>
+          ) : (
+            <Text style={{ color: "#fff" }}>No celebration video found!</Text>
+          )}
 
           <TouchableOpacity
             onPress={() => setOverlay(null)}
             style={{
-              // marginBottom ,
               position: "absolute",
-              bottom: 40, // distance from bottom
-              right: 20,  // distance from right edge
+              bottom: 40,
+              right: 20,
               paddingVertical: 20,
               paddingHorizontal: 25,
               backgroundColor: "#ad1313",
@@ -429,7 +439,6 @@ export default function Home() {
           </TouchableOpacity>
         </View>
       );
-    // }, 1000);
     }, 50);
   };
 
@@ -455,6 +464,24 @@ export default function Home() {
       </View>
     );
   }
+
+  const fetchCelebrationSettings = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Fetch settings error:", error);
+      return null;
+    }
+
+    return data; // contains celebration_type, youtube_link, video_url
+  };
 
   return (
     <View style={{ flex: 1, padding: 20, backgroundColor: "#141338" }}>

@@ -332,6 +332,19 @@ export default function Profile() {
           </TouchableOpacity>
         )}
 
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: 20,
+            right: hasPaid ? 20 : 60, // if hasPaid=false, shift left to make space for star
+            padding: 6,
+            zIndex: 10,
+          }}
+          onPress={() => router.push("/settings")}
+        >
+          <Ionicons name="settings-outline" size={26} color="#fff" />
+        </TouchableOpacity>
+
         {/* --- WEEK OVERVIEW --- */}
         <View style={styles.overviewBox}>
           <Text style={styles.overviewTitle}>This Week</Text>
