@@ -263,21 +263,47 @@ export default function Onboarding() {
                 setOverlay(
                   <PaywallModal
                     onClose={async () => {
-                      await supabase.from("user_state").upsert({
-                        user_id: session.user.id,
-                        has_onboarded: true,
-                      })
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
 
-                      setOverlay(null)
+                        if (session?.user) {
+                          await supabase
+                            .from("user_state")
+                            .upsert(
+                              {
+                                user_id: session.user.id,
+                                has_onboarded: true,
+                              },
+                              { onConflict: ["user_id"] }
+                            );
+                        }
+
+                        // only remove overlay after DB finishes
+                        setOverlay(null);
+                      } catch (e) {
+                        console.error("Error closing paywall:", e);
+                        setOverlay(null);
+                      }
                     }}
                     onSuccess={async () => {
-                      await supabase.from("user_state").upsert({
-                        user_id: session.user.id,
-                        has_paid: true,
-                        has_onboarded: true,
-                      },
-                      { onConflict: ["user_id"] }
-                    )
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+
+                        if (session?.user) {
+                          await supabase
+                            .from("user_state")
+                            .upsert(
+                              {
+                                user_id: session.user.id,
+                                has_paid: true,
+                                has_onboarded: true,
+                              },
+                              { onConflict: ["user_id"] }
+                            );
+                        }
+                      } catch (e) {
+                        console.error("Error updating success:", e);
+                      }
                     }}
                   />
                 );

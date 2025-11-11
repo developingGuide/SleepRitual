@@ -20,30 +20,13 @@ import ConfettiCannon from "react-native-confetti-cannon";
 export default function Home() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [bgColor] = useState(new Animated.Value(0));
   const [now, setNow] = useState(new Date());
   const [showPaywall, setShowPaywall] = useState(false);
   const [currentLogId, setCurrentLogId] = useState()
   const router = useRouter();
   const listRef = useRef(null);
 
-  const [showBreathe, setShowBreathe] = useState(false);
-  const breatheOpacity = useRef(new Animated.Value(0)).current;
-  const breatheY = useRef(new Animated.Value(0)).current;
-
   const { session } = useContext(AuthContext);
-
-  const affirmations = [
-    "Tiny steps are sacred too",
-    "One thing at a time",
-    "Stillness is progress",
-    "Peace counts as productivity",
-    "You showed up — that’s enough",
-    "Breathe. That’s the reset button.",
-    "Slow is smooth, smooth is fast",
-  ];
-  const [quote, setQuote] = useState("");
 
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -134,8 +117,6 @@ export default function Home() {
       let isActive = true;
 
       const init = async () => {
-        updateBackground();
-
         Animated.timing(opacity, {
           toValue: 1,
           duration: 400,
@@ -276,48 +257,7 @@ export default function Home() {
     }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
-
-  // 🌇 Background color logic
-  const getColorByTime = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 10) return "#FFF7D1"; // Morning
-    if (hour >= 10 && hour < 17) return "#FFFFFF"; // Afternoon
-    if (hour >= 17 && hour < 20) return "#FFD6A5"; // Evening
-    return "#141338"; // Night
-  };
-
-  const getTextColorByTime = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 20) return "#000000";
-    return "#FFFFFF";
-  };
-
-  const [currentColor, setCurrentColor] = useState(getColorByTime());
-  const [textColor, setTextColor] = useState(getTextColorByTime());
-
-  const updateBackground = () => {
-    const newColor = getColorByTime();
-    const newTextColor = getTextColorByTime();
-    bgColor.setValue(0);
-    Animated.timing(bgColor, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start(() => {
-      setCurrentColor(newColor);
-      setTextColor(newTextColor);
-    });
-  };
-
   const triggerBreathe = (taskText) => {
-    const randomQuote = affirmations[Math.floor(Math.random() * affirmations.length)];
-    setQuote(randomQuote);
-
     const localOpacity = new Animated.Value(0);
     const localY = new Animated.Value(0);
     const feelingOpacity = new Animated.Value(0);
@@ -441,9 +381,9 @@ export default function Home() {
 
 
   const triggerCelebration = (taskText) => {
-    setOverlay(
-      <ConfettiCannon count={200} origin={{ x: 200, y: 0 }} fallSpeed={2000}/>
-    )
+    // setOverlay(
+    //   <ConfettiCannon count={200} origin={{ x: 200, y: 0 }} fallSpeed={2000}/>
+    // )
 
     setTimeout(() => {
       setOverlay(
@@ -464,7 +404,7 @@ export default function Home() {
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
             <WebView
               source={{
-                uri: "https://youtu.be/xvFZjo5PgG0?si=iCuvXtLVOMEy-Sl8",
+                uri: "https://youtu.be/dQw4w9WgXcQ?si=Toa4GJm-i7_svz8X",
               }}
               allowsFullscreenVideo={true}
               mediaPlaybackRequiresUserAction={false}
@@ -489,7 +429,8 @@ export default function Home() {
           </TouchableOpacity>
         </View>
       );
-    }, 1000);
+    // }, 1000);
+    }, 50);
   };
 
   const { setOverlay } = useContext(OverlayContext);

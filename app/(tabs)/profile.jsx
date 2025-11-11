@@ -281,17 +281,49 @@ export default function Profile() {
             onPress={() => {
               setOverlay(
                 <PaywallModal
-                  onSuccess={async () => {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    await supabase
-                      .from("user_state")
-                      .update({ has_paid: true })
-                      .eq("user_id", user.id);
+                  onClose={async () => {
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
 
-                    setHasPaid(true);
-                    setOverlay(null);
+                      if (session?.user) {
+                        await supabase
+                          .from("user_state")
+                          .upsert(
+                            {
+                              user_id: session.user.id,
+                              has_onboarded: true,
+                            },
+                            { onConflict: ["user_id"] }
+                          );
+                      }
+
+                      // only remove overlay after DB finishes
+                      setOverlay(null);
+                    } catch (e) {
+                      console.error("Error closing paywall:", e);
+                      setOverlay(null);
+                    }
                   }}
-                  onClose={() => setOverlay(null)}
+                  onSuccess={async () => {
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
+
+                      if (session?.user) {
+                        await supabase
+                          .from("user_state")
+                          .upsert(
+                            {
+                              user_id: session.user.id,
+                              has_paid: true,
+                              has_onboarded: true,
+                            },
+                            { onConflict: ["user_id"] }
+                          );
+                      }
+                    } catch (e) {
+                      console.error("Error updating success:", e);
+                    }
+                  }}
                 />
               );
             }}
