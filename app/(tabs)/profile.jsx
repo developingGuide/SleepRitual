@@ -342,7 +342,7 @@ export default function Profile() {
           }}
           onPress={() => router.push("/settings")}
         >
-          <Ionicons name="settings-outline" size={26} color="#fff" />
+          <Ionicons name="sparkles-outline" size={26} color="#fff" />
         </TouchableOpacity>
 
         {/* --- WEEK OVERVIEW --- */}
