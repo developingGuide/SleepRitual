@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Image,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -77,6 +78,18 @@ const steps = [
     key: "vibe_preference",
   },
   {
+    type: "question",
+    title: "How do you want the app to celebrate when you finish a task?",
+    options: ["Confetti", "Peaceful", "Video", "None lol"],
+    key: "celebration_type",
+  },
+  {
+    type: "input",
+    title: "Paste your YouTube link:",
+    key: "youtube_link",
+    condition: (answers) => answers.celebration_type === "Video",
+  },
+  {
     type: "notification",
     title: "Lastly, set reminders!",
     description: "Do you want notifications so we can remind you to wind down before bed.",
@@ -92,7 +105,7 @@ export default function Onboarding() {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [granted, setGranted] = useState();
-  const current = steps[stepIndex];
+  const [answers, setAnswers] = useState({});
   const progress = useRef(new Animated.Value(0)).current;
 
   const { session } = useContext(AuthContext);
@@ -114,6 +127,15 @@ export default function Onboarding() {
     }
   }, [session]);
 
+  const visibleSteps = steps.filter((step) => {
+    if (step.condition) {
+      return step.condition(answers);
+    }
+    return true;
+  });
+
+  const current = visibleSteps[stepIndex];
+
   const saveAnswer = async (key, answer) => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
@@ -129,7 +151,7 @@ export default function Onboarding() {
   };
 
   const nextStep = async () => {
-    if (stepIndex < steps.length - 1) setStepIndex(stepIndex + 1);
+    if (stepIndex < visibleSteps.length - 1) setStepIndex(stepIndex + 1);
     else {
       await supabase
       .from("user_state")
@@ -169,7 +191,21 @@ export default function Onboarding() {
   }
 
   const handleOptionSelect = async (option) => {
-    if (current.key) await saveAnswer(current.key, option);
+    if (current.key) {
+      await saveAnswer(current.key, option);
+
+      setAnswers((prev) => ({ ...prev, [current.key]: option }));
+
+      if (current.key === "celebration_type") {
+        await supabase
+          .from("user_settings")
+          .upsert({
+            user_id: session.user.id,
+            celebrationType: option,
+          });
+      }
+    }
+
     nextStep();
   };
 
@@ -229,6 +265,69 @@ export default function Onboarding() {
                 <Text style={styles.optionText}>{opt}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        )}
+
+        {current.type === "input" && (
+          <View style={{ width: "100%" }}>
+            <Text style={[styles.description, { marginBottom: 10 }]}>
+              {current.title}
+            </Text>
+
+            <View
+              style={{
+                backgroundColor: "#1A1F40",
+                borderRadius: 10,
+                paddingHorizontal: 15,
+                paddingVertical: 12,
+                marginBottom: 20,
+              }}
+            >
+              <TextInput
+                placeholder="https://youtube.com/..."
+                placeholderTextColor="#666"
+                style={{
+                  color: "white",
+                  fontSize: 16,
+                }}
+                value={answers[current.key] || ""}
+                onChangeText={(text) => {
+                  setAnswers((prev) => ({ ...prev, [current.key]: text }));
+                }}
+                onSubmitEditing={async () => {
+                  const link = answers[current.key];
+
+                  await saveAnswer(current.key, link);
+
+                  await supabase.from("user_settings").upsert({
+                    user_id: session.user.id,
+                    youtube_link: link,
+                  });
+
+                  nextStep();
+                }}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={async () => {
+                const link = answers[current.key];
+
+                // Save to onboarding_answers (you already do this)
+                await saveAnswer(current.key, link);
+
+                // Save YouTube link into user_settings
+                await supabase.from("user_settings").upsert({
+                  user_id: session.user.id,
+                  youtube_link: link,
+                }, { onConflict: ["user_id"] });
+
+                nextStep();
+              }}
+            >
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
           </View>
         )}
 

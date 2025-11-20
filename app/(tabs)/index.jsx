@@ -30,6 +30,17 @@ export default function Home() {
 
   const opacity = useRef(new Animated.Value(1)).current;
 
+  const affirmations = [
+    "Tiny steps are sacred too",
+    "One thing at a time",
+    "Stillness is progress",
+    "Peace counts as productivity",
+    "You showed up — that’s enough",
+    "Breathe. That’s the reset button.",
+    "Slow is smooth, smooth is fast",
+  ];
+  const randomQuote = affirmations[Math.floor(Math.random() * affirmations.length)];
+
   const fadeOutAndNavigate = () => {
     Animated.timing(opacity, {
       toValue: 0,
@@ -111,6 +122,48 @@ export default function Home() {
       console.log("Unexpected error saving:", err);
     }
   };
+
+  const runCelebration = async (taskText) => {
+    const settings = await fetchCelebrationSettings();
+    if (!settings) return;
+
+    switch (settings.celebrationType) {
+      case "Peaceful":
+        triggerBreathe(taskText);
+        break;
+
+      case "youtube":
+      case "Video":
+        triggerCelebration(taskText);
+        break;
+
+      case "Confetti":
+        await setOverlay(
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+            }}
+          >
+            <ConfettiCannon
+              count={200}
+              origin={{ x: 0, y: 0 }}
+              autoStart={true}
+              fadeOut={true}
+              onAnimationEnd={() => setOverlay(null)}
+            />
+          </View>
+        );
+        break;
+
+      default:
+        break
+    }
+};
 
   useFocusEffect(
     useCallback(() => {
@@ -399,7 +452,7 @@ export default function Home() {
             zIndex: 999,
           }}
         >
-          {settings.celebrationType === "youtube" && settings.youtube_link ? (
+          {(settings.celebrationType === "youtube" || settings.celebrationType === "Video")  && settings.youtube_link ? (
             <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
               <WebView
                 source={{
@@ -408,15 +461,6 @@ export default function Home() {
                 allowsFullscreenVideo={true}
                 mediaPlaybackRequiresUserAction={false}
                 style={{ flex: 1 }}
-              />
-            </View>
-          ) : settings.celebrationType === "video" && settings.video_url ? (
-            <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-              <WebView
-                source={{ uri: settings.video_url }}
-                allowsFullscreenVideo
-                mediaPlaybackRequiresUserAction={false}
-                style={{ flex: 1}}
               />
             </View>
           ) : (
@@ -480,7 +524,7 @@ export default function Home() {
       return null;
     }
 
-    return data; // contains celebration_type, youtube_link, video_url
+    return data; // contains celebrationType, youtube_link, video_url
   };
 
   return (
@@ -592,9 +636,7 @@ export default function Home() {
                           .limit(1);
 
                         if (!t.done) {
-                          // means the user just *completed* it
-                          // triggerBreathe(t.text);
-                          triggerCelebration(t.text);
+                          runCelebration(t.text);
                         }
                       }}
                       activeOpacity={0.7}
