@@ -12,12 +12,12 @@ function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#F9D976",
+        tabBarActiveTintColor: "#4d9aff",
         tabBarInactiveTintColor: "#fff",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#141338",
-          borderTopColor: "#141338",
+          backgroundColor: "#222",
+          borderTopColor: "#222",
           paddingTop: 6,
           height: 60,
         },
@@ -58,7 +58,7 @@ export default function RootLayout() {
 function ThemedApp() {
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#141338" }}>
+    <View style={{ flex: 1, backgroundColor: "#222" }}>
       <SafeAreaView style={{ flex: 1 }}>
         <TabLayout />
       </SafeAreaView>

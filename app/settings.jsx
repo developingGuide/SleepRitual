@@ -78,7 +78,7 @@ export default function SettingsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#141338",
+    backgroundColor: "#222",
     padding: 20,
     alignItems: "center",
   },

@@ -458,7 +458,7 @@ export default function Home() {
   
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#222" }}>
         <ActivityIndicator size="large" />
         <Text style={{color: "#fff"}}>Loading your bedtime data...</Text>
       </View>
@@ -484,7 +484,7 @@ export default function Home() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: "#141338" }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: "#222" }}>
       <Animated.View style={{ flex: 1, opacity }}>
       {data ? (
         <>
@@ -677,7 +677,7 @@ export default function Home() {
       {/* Bottom button */}
       <TouchableOpacity
         style={{
-          backgroundColor: "#252363",
+          backgroundColor: "#4d9aff",
           padding: 15,
           borderRadius: 30,
           alignItems: "center",

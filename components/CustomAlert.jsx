@@ -77,7 +77,7 @@ export default function CustomAlert({ visible, message, onClose, onConfirm }) {
           <TouchableOpacity
             onPress={handleClose}
             style={{
-              backgroundColor: "#252363",
+              backgroundColor: "#4d9aff",
               paddingVertical: 10,
               borderRadius: 10,
             }}

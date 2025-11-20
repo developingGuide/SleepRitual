@@ -54,7 +54,7 @@ function InitialRoute() {
 
   if (loading || isChecking || initialPath === null) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#222" }}>
         <ActivityIndicator size="large" color="#6C63FF" />
       </View>
     );
@@ -79,18 +79,18 @@ export default function Layout() {
     console.log(customerInfo)
   }
 
-  useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+  // useEffect(() => {
+  //   Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-    // if (Platform.OS === 'ios') {
-    //    Purchases.configure({apiKey: <revenuecat_project_apple_api_key>});
-    // } else if
-    if (Platform.OS === 'android') {
-      Purchases.configure({apiKey: "goog_fdJYlchfRoXYNJjsnXPNpwrPcGB"});
-    }
+  //   // if (Platform.OS === 'ios') {
+  //   //    Purchases.configure({apiKey: <revenuecat_project_apple_api_key>});
+  //   // } else if
+  //   if (Platform.OS === 'android') {
+  //     Purchases.configure({apiKey: "goog_fdJYlchfRoXYNJjsnXPNpwrPcGB"});
+  //   }
 
-    // getCustomerInfo()
-  }, []);
+  //   // getCustomerInfo()
+  // }, []);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -105,7 +105,7 @@ export default function Layout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#141338" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#222" }}>
         <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
@@ -113,7 +113,7 @@ export default function Layout() {
 
   return (
     <OverlayContext.Provider value={{ overlay, setOverlay }}>
-      <View style={{ flex: 1, backgroundColor: "#141338" }}>
+      <View style={{ flex: 1, backgroundColor: "#222" }}>
         <StatusBar style="auto" />
         <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
           <AuthProvider>
@@ -122,7 +122,7 @@ export default function Layout() {
                 headerShown: false,
                 animation: "fade",
                 presentation: "transparentModal",
-                contentStyle: { backgroundColor: "#141338" },
+                contentStyle: { backgroundColor: "#222" },
               }}
             />
             <InitialRoute />

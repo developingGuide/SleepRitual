@@ -107,7 +107,7 @@ export default function Sleeping() {
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
-        backgroundColor: "#141338",
+        backgroundColor: "#222",
       }}
     >
       <Image source={require('../assets/sleeping_mascot.png')} style={{width: 100, height: 100}}/>

@@ -224,7 +224,7 @@ export default function Profile() {
 
   if (loading)
     return (
-      <View style={[styles.center, { backgroundColor: "#141338" }]}>
+      <View style={[styles.center, { backgroundColor: "#222" }]}>
         <ActivityIndicator size="large" color="#8effc1" />
       </View>
     );
@@ -269,7 +269,7 @@ export default function Profile() {
 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: "#141338" }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#222" }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 22, fontWeight: "600", marginTop: 15, color: "#fff", fontFamily: "Manrope-Bold", paddingLeft: 20 }}>
           Profile
@@ -328,7 +328,7 @@ export default function Profile() {
               );
             }}
           >
-            <Ionicons name="star-outline" size={26} color="#F9D976" />
+            <Ionicons name="star" size={26} color="#F9D976" />
           </TouchableOpacity>
         )}
 
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  overviewTitle: { color: "#F9D976", fontSize: 18, fontFamily: "Manrope-Bold" },
+  overviewTitle: { color: "#8FBfff", fontSize: 18, fontFamily: "Manrope-Bold" },
   totalHours: { color: "#fff", fontSize: 46, marginBottom: 12, fontWeight: "700", fontFamily: "Manrope-Regular" },
   subtext: { color: "#fff", fontSize: 14, fontFamily: "Manrope-Regular" },
   streakBubble: {
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
   },
-  sectionTitle: { color: "#F9D976", fontSize: 18, marginBottom: 12, fontFamily: "Manrope-Bold" },
+  sectionTitle: { color: "#8FBfff", fontSize: 18, marginBottom: 12, fontFamily: "Manrope-Bold" },
 
   historyBox: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: { backgroundColor: "rgba(255, 255, 255, 0.1)" },
   tabText: { color: "#fff", fontSize: 14, fontFamily: "Manrope-Bold" },
-  tabTextActive: { color: "#F9D976", fontWeight: "600", fontFamily: "Manrope-Bold" },
+  tabTextActive: { color: "#8FBfff", fontWeight: "600", fontFamily: "Manrope-Bold" },
 
   historyContent: { marginTop: 4 },
   card: {
@@ -567,11 +567,11 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
-  cardDate: { color: "#F9D976", fontSize: 13, marginBottom: 4, fontFamily: "Manrope-Bold" },
+  cardDate: { color: "#8FBfff", fontSize: 13, marginBottom: 4, fontFamily: "Manrope-Bold" },
   cardText: { color: "#fff", fontSize: 14, lineHeight: 20, fontFamily: "Manrope-Regular" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap" },
   tag: {
-    backgroundColor: "#F9D976",
+    backgroundColor: "#8FBfff",
     borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     borderRadius: 20,
     marginBottom: 10,
-    backgroundColor: "#252363"
+    backgroundColor: "#4d9aff"
   },
   feedbackText: {
     color: "#fff",
